@@ -262,7 +262,8 @@
 
 extern const int vgm_command_sizes[];
 
-/** Tells you how much of the data a command takes, including data block lengths
+/**
+ * Tells you how much of the data a command takes, including data block lengths
  * You can use this to skip entire commands.
  *
  * returns the number of bytes the command takes, or -1 if the command is invalid or if there aren't enough bytes remaining.
