@@ -1,0 +1,87 @@
+#pragma once
+
+enum vgm_chip_id {
+	// first chips
+	SN76496  = 0x00, // variants: SN76489(A), SEGA PSG, T6W28
+	YM2413   = 0x01, // variants: VRC7
+	YM2612   = 0x02, // variants: YM3438
+	YM2151   = 0x03,
+	SEGAPCM  = 0x04,
+	RF5C68   = 0x05, // variants: RF5C164, RF5C105
+	YM2203   = 0x06,
+	YM2608   = 0x07, // variants: YMF288
+	YM2610   = 0x08, // variants: YM2610B
+	YM3812   = 0x09, // also known as OPL2
+	YM3526   = 0x0A,
+	Y8950    = 0x0B,
+	YMF262   = 0x0C, // also known as OPL3
+	YMF278B  = 0x0D, // also known as OPL4
+	YMF271   = 0x0E,
+	YMZ280B  = 0x0F,
+	RF5C164  = 0x10,
+	PWM      = 0x11,
+	AY8910   = 0x12, // variants: AY-3-8912/8913/8930, YM2149, YM3439, YMZ284/294
+	GB_DMG   = 0x13,
+	NES_APU  = 0x14, // also known as RP2A03/RP2A07
+	YMW258   = 0x15, // also known as MultiPCM
+	uPD7759  = 0x16,
+	OKIM6258 = 0x17, // also known as MSM6258
+	OKIM6295 = 0x18, // also known as MSM6295
+	K051649  = 0x19, // also known as SCC1, variants: K052539, also known as SCC+
+	K054539  = 0x1A,
+	C6280    = 0x1B,
+	C140     = 0x1C,
+	K053260  = 0x1D,
+	POKEY    = 0x1E,
+	QSOUND   = 0x1F,
+	SCSP     = 0x20, // also known as YMF292
+	WSWAN    = 0x21,
+	VBOY_VSU = 0x22,
+	SAA1099  = 0x23,
+	ES5503   = 0x24,
+	ES5506   = 0x25, // variants: ES5505
+	X1_010   = 0x26,
+	C352     = 0x27,
+	GA20     = 0x28,
+	MIKEY    = 0x29,
+
+	// second chips
+	SECOND_SN76496  = 0x80,
+	SECOND_YM2413   = 0x81,
+	SECOND_YM2612   = 0x82,
+	SECOND_YM2151   = 0x83,
+	SECOND_SEGAPCM  = 0x84,
+	SECOND_RF5C68   = 0x85,
+	SECOND_YM2203   = 0x86,
+	SECOND_YM2608   = 0x87,
+	SECOND_YM2610   = 0x88,
+	SECOND_YM3812   = 0x89,
+	SECOND_YM3526   = 0x8A,
+	SECOND_Y8950    = 0x8B,
+	SECOND_YMF262   = 0x8C,
+	SECOND_YMF278B  = 0x8D,
+	SECOND_YMF271   = 0x8E,
+	SECOND_YMZ280B  = 0x8F,
+	SECOND_AY8910   = 0x92,
+	SECOND_GB_DMG   = 0x93,
+	SECOND_NES_APU  = 0x94,
+	SECOND_YMW258   = 0x95,
+	SECOND_uPD7759  = 0x96,
+	SECOND_OKIM6258 = 0x97,
+	SECOND_OKIM6295 = 0x98,
+	SECOND_K051649  = 0x99,
+	SECOND_K054539  = 0x9A,
+	SECOND_C6280    = 0x9B,
+	SECOND_C140     = 0x9C,
+	SECOND_K053260  = 0x9D,
+	SECOND_POKEY    = 0x9E,
+	SECOND_SCSP     = 0xA0,
+	SECOND_WSWAN    = 0xA1,
+	SECOND_VBOY_VSU = 0xA2,
+	SECOND_SAA1099  = 0xA3,
+	SECOND_ES5503   = 0xA4,
+	SECOND_ES5506   = 0xA5,
+	SECOND_X1_010   = 0xA6,
+	SECOND_C352     = 0xA7,
+	SECOND_GA20     = 0xA8,
+};

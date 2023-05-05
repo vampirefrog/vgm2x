@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdint.h>
+
+#include "error.h"
+
 #define VGM_HEADER_FIELDS \
 	VGM_HEADER_OFFSET(0x04, eof_offset, 0x100) \
 	VGM_HEADER_FIELD32(0x08, version, 0x100) \
@@ -80,3 +84,5 @@ VGM_HEADER_FIELDS
 #undef VGM_HEADER_FIELD16
 #undef VGM_HEADER_FIELD32
 };
+
+enum vgm_error_code vgm_header_read(struct vgm_header *header, uint8_t *data, int data_len, struct vgm_error *error);
