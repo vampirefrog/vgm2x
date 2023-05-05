@@ -6,7 +6,7 @@ Some tools to extract MIDI and 4-op FM voices from [.VGM files](https://vgmrips.
 Conversion tools
 ----------------
 
-|   2→| vgm | gym | dro | s98 | txt | opm | dmp | tfi | ins | y12 | mid |
+| 2 ⮣| vgm | gym | dro | s98 | txt | opm | dmp | tfi | ins | y12 | mid |
 | ---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | vgm | ⛔  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  |
 | gym | 🔲  | ⛔  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  | 🔲  |
@@ -31,5 +31,5 @@ Similar to Shiru's vgm2opm, it extracts 4-op FM voices from vgm files. Unlike Sh
 
 Resources:
 ----------
-
 * [vgm2pre](https://www.deflemask.com/forum/general/vgm2pre-vgm-preset-dumper-(open-beta!)/)
+* [S98](https://vgmrips.net/wiki/S98_File_Format)
