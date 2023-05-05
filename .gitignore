@@ -52,3 +52,5 @@ Mkfile.old
 dkms.conf
 *.opm
 vgm/files/*
+
+vgm2opm
