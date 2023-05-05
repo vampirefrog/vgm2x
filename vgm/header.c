@@ -14,7 +14,7 @@ enum vgm_error_code vgm_header_read(struct vgm_header *header, uint8_t *data, in
 	READ_UINT32(version, 0x08);
 	READ_UINT32(sn76489_clock, 0x0c);
 	READ_UINT32(ym2413_clock, 0x10);
-	READ_UINT32(gd3_offset, 0x14);
+	READ_OFFSET(gd3_offset, 0x14);
 	READ_UINT32(total_samples, 0x18);
 	READ_UINT32(loop_offset, 0x1C);
 	READ_UINT32(loop_samples, 0x20);
