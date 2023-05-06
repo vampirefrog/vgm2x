@@ -48,6 +48,7 @@ enum vgm_error_code vgm_interpreter_run(struct vgm_interpreter *it, uint8_t *buf
 				break;
 			}
 			uint32_t block_size = buf[i+3] | buf[i+4] << 8 | buf[i+5] << 16 | buf[i+6] << 24;
+			block_size &= 0x7fffffff;
 			if(end_offset - i < 7 + block_size) {
 				fprintf(stderr, "0x67 data of size %d cuts off with %d left\n", block_size, end_offset - i);
 				break;
