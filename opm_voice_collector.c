@@ -42,7 +42,7 @@ void opm_voice_collector_push_voice(struct opm_voice_collector *collector, struc
 				(o1->ame_d1r & 0x9f) != (o2->ame_d1r & 0x9f) ||
 				(o1->dt2_d2r & 0xdf) != (o2->dt2_d2r & 0xdf) ||
 				(o1->tl & 0x7f) != (o2->tl & 0x7f) ||
-				(o1->d1l_rr) != (o2->d1l_rr)
+				o1->d1l_rr != o2->d1l_rr
 			) {
 				good = 0;
 				break;
@@ -60,7 +60,7 @@ void opm_voice_collector_push_voice(struct opm_voice_collector *collector, struc
 			fprintf(stderr, "Could not reallocate %d OPM voices\n", collector->num_voices);
 			return;
 		}
-		memcpy(&collector->voices[existing_voice], &voice, sizeof(voice));
+		memcpy(&collector->voices[existing_voice], voice, sizeof(*voice));
 	} else {
 		struct opm_voice *v = &collector->voices[existing_voice];
 		v->chan_used_mask |= 1 << chan;
