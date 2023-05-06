@@ -69,6 +69,10 @@ enum vgm_error_code vgm_interpreter_run(struct vgm_interpreter *it, uint8_t *buf
 				if(it->wait) it->wait(buf[i] - 0x80, it->data_ptr);
 				// if(it->write_port8_reg8_data8) it->write_port8_reg8_data8(YM2612, 0, 0x2a, data_bank_byte);
 			} else switch(buf[i]) {
+				case 0x61: if(it->wait) it->wait(buf[i+1] | buf[i+2] << 8, it->data_ptr); break;
+				case 0x62: if(it->wait) it->wait(735, it->data_ptr); break;
+				case 0x63: if(it->wait) it->wait(882, it->data_ptr); break;
+				case 0x66: if(it->end) it->end(it->data_ptr); i = end_offset; break;
 				case 0x31: if(it->write_stereo_mask) it->write_stereo_mask(i & 0x80 ? SECOND_AY8910 : AY8910, buf[i+1], it->data_ptr); break;
 				case 0x51: if(it->write_reg8_data8) it->write_reg8_data8(YM2413, buf[i+1], buf[i+2], it->data_ptr); break;
 				case 0x52: if(it->write_port8_reg8_data8) it->write_port8_reg8_data8(YM2612, 0, buf[i+1], buf[i+2], it->data_ptr); break;
@@ -85,10 +89,6 @@ enum vgm_error_code vgm_interpreter_run(struct vgm_interpreter *it, uint8_t *buf
 				case 0x5D: if(it->write_reg8_data8) it->write_reg8_data8(YMZ280B, buf[i+1], buf[i+2], it->data_ptr); break;
 				case 0x5E: if(it->write_port8_reg8_data8) it->write_port8_reg8_data8(YMF262, 0, buf[i+1], buf[i+2], it->data_ptr); break;
 				case 0x5F: if(it->write_port8_reg8_data8) it->write_port8_reg8_data8(YMF262, 1, buf[i+1], buf[i+2], it->data_ptr); break;
-				case 0x61: if(it->wait) it->wait(buf[i+1] | buf[i+2] << 8, it->data_ptr); break;
-				case 0x62: if(it->wait) it->wait(735, it->data_ptr); break;
-				case 0x63: if(it->wait) it->wait(882, it->data_ptr); break;
-				case 0x66: if(it->end) it->end(it->data_ptr); i = end_offset; break;
 				case 0xd0: if(it->write_port8_reg8_data8) it->write_port8_reg8_data8(YMF278B, buf[i+1], buf[i+2], buf[i+3], it->data_ptr); break;
 				case 0xd1: if(it->write_port8_reg8_data8) it->write_port8_reg8_data8(YMF271, buf[i+1], buf[i+2], buf[i+3], it->data_ptr); break;
 				case 0xd2: if(it->write_port8_reg8_data8) it->write_port8_reg8_data8(K051649, buf[i+1], buf[i+2], buf[i+3], it->data_ptr); break;
