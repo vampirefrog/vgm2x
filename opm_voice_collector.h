@@ -1,6 +1,6 @@
 #pragma once
 
-#include "chip_analyzer.h"
+#include <stdint.h>
 
 struct opm_voice_operator {
 	uint8_t dt1_mul;
@@ -19,16 +19,11 @@ struct opm_voice {
 	struct opm_voice_operator operators[4];
 };
 
-struct ym2151_analyzer {
-	struct chip_analyzer chip_analyzer;
-
-	int clock;
-	uint8_t regs[256];
-
+struct opm_voice_collector {
 	struct opm_voice *voices;
 	int num_voices;
 };
 
-struct ym2151_analyzer * ym2151_analyzer_new(int clock);
-void ym2151_analyzer_init(struct ym2151_analyzer *analyzer, int clock);
-void ym2151_analyzer_dump_voices(struct ym2151_analyzer *analyzer);
+void opm_voice_collector_init(struct opm_voice_collector *c);
+void opm_voice_collector_push_voice(struct opm_voice_collector *c, struct opm_voice *v, int chan);
+void opm_voice_collector_dump_voices(struct opm_voice_collector *c);
