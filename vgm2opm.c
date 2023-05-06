@@ -97,6 +97,8 @@ static void add_analyzer(struct chip_analyzer *a, int id) {
 }
 
 static void init_chip(enum vgm_chip_id chip_id, int clock, void *data_ptr) {
+	if(analyzers_by_id[chip_id]) return;
+
 	switch(chip_id) {
 		case YM2612:
 		case YM2203:
@@ -123,11 +125,11 @@ static void write_port8_reg8_data8(enum vgm_chip_id chip_id, uint8_t port, uint8
 }
 
 static void wait(int samples, void *data_ptr) {
-	printf("wait %d\n", samples);
+	// printf("wait %d\n", samples);
 }
 
 static void end(void *data_ptr) {
-	printf("end\n");
+	// printf("end\n");
 }
 
 int main(int argc, char **argv) {
@@ -185,9 +187,6 @@ int main(int argc, char **argv) {
 		}
 		free(buf);
 
-		if(analyzers[YM2151])
-			ym2151_analyzer_dump_voices((struct ym2151_analyzer *)analyzers_by_id[YM2151]);
-
 		int voice_num = 0;
 
 		// for(int j = 0; j < num_opn_voices; j++) {
@@ -207,6 +206,9 @@ int main(int argc, char **argv) {
 		// opm_voices = 0;
 		// num_opm_voices = 0;
 	}
+
+	if(analyzers[YM2151])
+		ym2151_analyzer_dump_voices((struct ym2151_analyzer *)analyzers_by_id[YM2151]);
 
 	return 0;
 }

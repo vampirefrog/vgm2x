@@ -81,7 +81,6 @@ static void ym2151_analyzer_push_voice(struct ym2151_analyzer *analyzer, uint8_t
 }
 
 static void ym2151_cmd_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_t reg, uint8_t data, void *data_ptr) {
-	printf("YM2151 0x%02x 0x%02x\n", reg, data);
 	struct ym2151_analyzer *analyzer = (struct ym2151_analyzer *)chip_analyzer;
 	if(reg == 0x08) {
 		uint8_t mask = (data & 0x78) >> 3;
