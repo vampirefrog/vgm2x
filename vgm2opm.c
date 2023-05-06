@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#include "tools.h"
 #include "vgm/interpreter.h"
 #include "opn_analyzer.h"
 #include "ym2151_analyzer.h"
@@ -106,11 +107,19 @@ static void init_chip(enum vgm_chip_id chip_id, int clock, void *data_ptr) {
 		case YM2610:
 		case YM3812:
 		case YM3526:
-			add_analyzer((struct chip_analyzer *)opn_analyzer_new(clock, chip_id = YM2203 ? 3 : 6), chip_id);
+		case SECOND_YM2612:
+		case SECOND_YM2203:
+		case SECOND_YM2608:
+		case SECOND_YM2610:
+		case SECOND_YM3812:
+		case SECOND_YM3526:
+			add_analyzer((struct chip_analyzer *)opn_analyzer_new(clock, chip_id == YM2203 || chip_id == SECOND_YM2203 ? 3 : 6), chip_id);
 			break;
 		case YM2151:
+		case SECOND_YM2151:
 			add_analyzer((struct chip_analyzer *)ym2151_analyzer_new(clock), chip_id);
 			break;
+		default:
 	}
 }
 
@@ -134,46 +143,8 @@ static void end(void *data_ptr) {
 
 int main(int argc, char **argv) {
 	for(int i = 1; i < argc; i++) {
-		FILE *f = fopen(argv[i], "rb");
-		if(!f) {
-			fprintf(stderr, "Could not open %s: %s (%d)\n", argv[i], strerror(errno), errno);
-			return 1;
-		}
-
-		int r = fseek(f, 0, SEEK_END);
-		if(r) {
-			fprintf(stderr, "Could not seek to end of file for %s: %s (%d)\n", argv[i], strerror(errno), errno);
-			return 1;
-		}
-
-		long s = ftell(f);
-		if(s < 0) {
-			fprintf(stderr, "Could not get file end position for %s: %s (%d)\n", argv[i], strerror(errno), errno);
-			return 1;
-		}
-
-		rewind(f);
-
-		uint8_t *buf = malloc(s);
-		if(!buf) {
-			fprintf(stderr, "Could not allocate %lu bytes for %s: %s (%d)\n", s, argv[i], strerror(errno), errno);
-			fclose(f);
-			return 1;
-		}
-
-		size_t rd = fread(buf, 1, s, f);
-		if(rd != s) {
-			fprintf(stderr, "Short read %zu of %lu bytes from %s: %s (%d)\n", rd, s, argv[i], strerror(errno), errno);
-			if(fclose(f))
-				fprintf(stderr, "Could not close %s: %s (%d)\n", argv[i], strerror(errno), errno);
-			free(buf);
-			return 1;
-		}
-
-		if(fclose(f)) {
-			fprintf(stderr, "Warning: Could not close %s: %s (%d)\n", argv[i], strerror(errno), errno);
-		}
-
+		size_t s = 0;
+		uint8_t *buf = load_gzfile(argv[i], &s);
 		struct vgm_interpreter interpreter;
 		vgm_interpreter_init(&interpreter);
 		interpreter.init_chip = init_chip;
@@ -186,29 +157,22 @@ int main(int argc, char **argv) {
 		if(e != SUCCESS) {
 		}
 		free(buf);
-
-		int voice_num = 0;
-
-		// for(int j = 0; j < num_opn_voices; j++) {
-		// 	//opn_voice_dump(&opn_voices[j]);
-		// 	opn_voice_dump_opm(&opn_voices[j], voice_num);
-		// 	voice_num++;
-		// }
-		// free(opn_voices);
-		// opn_voices = 0;
-		// num_opn_voices = 0;
-
-		// for(int j = 0; j < num_opm_voices; j++) {
-		// 	opm_voice_dump_opm(&opm_voices[j], voice_num);
-		// 	voice_num++;
-		// }
-		// free(opm_voices);
-		// opm_voices = 0;
-		// num_opm_voices = 0;
 	}
 
-	if(analyzers[YM2151])
-		ym2151_analyzer_dump_voices((struct ym2151_analyzer *)analyzers_by_id[YM2151]);
+	if(analyzers_by_id[YM2151]) ym2151_analyzer_dump_voices((struct ym2151_analyzer *)analyzers_by_id[YM2151]);
+	if(analyzers_by_id[SECOND_YM2151]) ym2151_analyzer_dump_voices((struct ym2151_analyzer *)analyzers_by_id[SECOND_YM2151]);
+	if(analyzers_by_id[YM2612]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[YM2612]);
+	if(analyzers_by_id[SECOND_YM2612]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[SECOND_YM2612]);
+	if(analyzers_by_id[YM2203]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[YM2203]);
+	if(analyzers_by_id[SECOND_YM2203]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[SECOND_YM2203]);
+	if(analyzers_by_id[YM2608]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[YM2608]);
+	if(analyzers_by_id[SECOND_YM2608]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[SECOND_YM2608]);
+	if(analyzers_by_id[YM2610]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[YM2610]);
+	if(analyzers_by_id[SECOND_YM2610]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[SECOND_YM2610]);
+	if(analyzers_by_id[YM3812]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[YM3812]);
+	if(analyzers_by_id[SECOND_YM3812]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[SECOND_YM3812]);
+	if(analyzers_by_id[YM3526]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[YM3526]);
+	if(analyzers_by_id[SECOND_YM3526]) opn_analyzer_dump_voices((struct opn_analyzer *)analyzers_by_id[SECOND_YM3526]);
 
 	return 0;
 }

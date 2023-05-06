@@ -1,12 +1,12 @@
 CC=gcc
 CFLAGS=-Wall -ggdb
-LDFLAGS=
+LDFLAGS=-lz
 
 .PHONY: all
 
 all: vgm2opm
 
-vgm2opm: vgm2opm.c chip_analyzer.o opn_analyzer.o ym2151_analyzer.o vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o
+vgm2opm: vgm2opm.o tools.o chip_analyzer.o opn_analyzer.o ym2151_analyzer.o vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 %.o: %.c
