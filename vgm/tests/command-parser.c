@@ -2,12 +2,9 @@
 #include <errno.h>
 #include <string.h>
 
+#include "tools.h"
 #include "../push_reader.h"
 #include "../command_parser.h"
-
-static char safechar(char c) {
-	return c >= 0x20 && c < 0x7f ? c : '.';
-}
 
 static void hexdump(uint8_t *bytes, int num_bytes) {
 	for(int i = 0; i < num_bytes; i+=16) {
