@@ -7,7 +7,7 @@ VGMDIR=
 
 all: vgm2opm
 
-vgm2opm: vgm2opm.o cmdline.o tools.o chip_analyzer.o opn_analyzer.o opn_voice_collector.o opm_analyzer.o opm_voice_collector.o vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o
+vgm2opm: vgm2opm.o cmdline.o tools.o chip_analyzer.o opn_analyzer.o opn_voice_collector.o opm_analyzer.o opm_voice_collector.o vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o libfmvoice/opm_file.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 %.o: %.c

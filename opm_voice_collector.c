@@ -67,53 +67,56 @@ void opm_voice_collector_push_voice(struct opm_voice_collector *collector, struc
 	}
 }
 
+void opm_voice_dump(struct opm_voice *v) {
+	printf(
+		"fb=%d connect=%d chan_used_mask=%c%c%c%c%c%c%c%c\n",
+		v->fb_connect >> 3 & 0x07,
+		v->fb_connect & 0x07,
+		v->chan_used_mask & 1 ? '1' : '0',
+		v->chan_used_mask & 2 ? '1' : '0',
+		v->chan_used_mask & 4 ? '1' : '0',
+		v->chan_used_mask & 8 ? '1' : '0',
+		v->chan_used_mask & 16 ? '1' : '0',
+		v->chan_used_mask & 32 ? '1' : '0',
+		v->chan_used_mask & 64 ? '1' : '0',
+		v->chan_used_mask & 128 ? '1' : '0'
+	);
+	printf("OP AR D1R D2R RR D1L  TL MUL DT1 DT2 KS AME\n");
+	for(int j = 0; j < 4; j++) {
+		struct opm_voice_operator *o = v->operators + j;
+		printf(
+			" %d"
+			" %2d"
+			"  %2d"
+			"  %2d"
+			" %2d"
+			"  %2d"
+			" %3d"
+			"  %2d"
+			"  %2d"
+			"   %d"
+			"  %d"
+			"   %d"
+			"\n",
+			j,
+			o->ks_ar & 0x1f,
+			o->ame_d1r & 0x1f,
+			o->dt2_d2r & 0x1f,
+			o->d1l_rr & 0x0f,
+			o->d1l_rr >> 4,
+			o->tl,
+			o->dt1_mul & 0x0f,
+			o->dt1_mul >> 4 & 0x07,
+			o->dt2_d2r >> 6,
+			o->ks_ar >> 6,
+			o->ame_d1r >> 7
+		);
+	}
+}
+
 void opm_voice_collector_dump_voices(struct opm_voice_collector *collector) {
 	for(int i = 0; i < collector->num_voices; i++) {
 		printf("Voice %d\n", i);
-		struct opm_voice *v = &collector->voices[i];
-		printf(
-			"fb=%d connect=%d chan_used_mask=%c%c%c%c%c%c%c%c\n",
-			v->fb_connect >> 3 & 0x07,
-			v->fb_connect & 0x07,
-			v->chan_used_mask & 1 ? '1' : '0',
-			v->chan_used_mask & 2 ? '1' : '0',
-			v->chan_used_mask & 4 ? '1' : '0',
-			v->chan_used_mask & 8 ? '1' : '0',
-			v->chan_used_mask & 16 ? '1' : '0',
-			v->chan_used_mask & 32 ? '1' : '0',
-			v->chan_used_mask & 64 ? '1' : '0',
-			v->chan_used_mask & 128 ? '1' : '0'
-		);
-		printf("OP AR D1R D2R RR D1L  TL MUL DT1 DT2 KS AME\n");
-		for(int j = 0; j < 4; j++) {
-			struct opm_voice_operator *o = v->operators + j;
-			printf(
-				" %d"
-				" %2d"
-				"  %2d"
-				"  %2d"
-				" %2d"
-				"  %2d"
-				" %3d"
-				"  %2d"
-				"  %2d"
-				"   %d"
-				"  %d"
-				"   %d"
-				"\n",
-				j,
-				o->ks_ar & 0x1f,
-				o->ame_d1r & 0x1f,
-				o->dt2_d2r & 0x1f,
-				o->d1l_rr & 0x0f,
-				o->d1l_rr >> 4,
-				o->tl,
-				o->dt1_mul & 0x0f,
-				o->dt1_mul >> 4 & 0x07,
-				o->dt2_d2r >> 6,
-				o->ks_ar >> 6,
-				o->ame_d1r >> 7
-			);
-		}
+		opm_voice_dump(collector->voices + i);
 	}
 }

@@ -15,9 +15,11 @@ struct opm_voice {
 	uint8_t fb_connect;
 	int vgm_ofs;
 	uint8_t chan_used_mask;
-	int note_usage[127];
+	int note_usage[128];
 	struct opm_voice_operator operators[4];
 };
+
+void opm_voice_dump(struct opm_voice *v);
 
 struct opm_voice_collector {
 	struct opm_voice *voices;

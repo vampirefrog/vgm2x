@@ -17,4 +17,3 @@ struct opn_analyzer {
 
 struct opn_analyzer *opn_analyzer_new(int clock, int num_channels);
 void opn_analyzer_init(struct opn_analyzer *analyzer, int clock, int num_channels);
-void opn_analyzer_dump_voices(struct opn_analyzer *analyzer);

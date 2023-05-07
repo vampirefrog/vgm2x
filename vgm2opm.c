@@ -9,6 +9,8 @@
 #include "opn_analyzer.h"
 #include "opm_analyzer.h"
 
+#include "libfmvoice/opm_file.h"
+
 void opn_voice_to_opm_voice(struct opn_voice *opnv, struct opm_voice *opmv) {
 	opmv->vgm_ofs = opnv->vgm_ofs;
 	opmv->chan_used_mask = opnv->chan_used_mask;
@@ -96,6 +98,10 @@ static void end(void *data_ptr) {
 	// printf("end\n");
 }
 
+size_t write_fn(void *buf, size_t bufsize, void *data_ptr) {
+	return fwrite(buf, 1, bufsize, (FILE *)data_ptr);
+}
+
 char *opt_output = "-";
 int main(int argc, char **argv) {
 	int optind = cmdline_parse_args(argc, argv, (struct cmdline_option[]){
@@ -113,7 +119,6 @@ int main(int argc, char **argv) {
 	if(optind < 0) exit(-optind);
 
 	for(int i = optind; i < argc; i++) {
-		printf("%s\n", argv[i]);
 		size_t s = 0;
 		uint8_t *buf = load_gzfile(argv[i], &s);
 		struct vgm_interpreter interpreter;
@@ -157,7 +162,49 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-	opm_voice_collector_dump_voices(&collector);
+
+	struct opm_file opm_file;
+	opm_file_init(&opm_file);
+	for(int i = 0; i < collector.num_voices; i++) {
+		struct opm_voice *v = collector.voices + i;
+		struct opm_file_voice fv;
+		memset(&fv, 0, sizeof(fv));
+		fv.number = i;
+		snprintf(fv.name, sizeof(fv.name), "Instrument %d", i);
+		fv.lfo_lfrq = 0;
+		fv.lfo_amd = 0;
+		fv.lfo_pmd = 0;
+		fv.lfo_wf = 0;
+		fv.nfrq = 0;
+		fv.ch_pan = 64;
+		fv.ch_fl = v->fb_connect >> 3 & 0x07;
+		fv.ch_con = v->fb_connect & 0x07;
+		fv.ch_ams = 0;
+		fv.ch_pms = 0;
+		fv.ch_slot = 120;
+		fv.ch_ne = 0;
+		for(int j = 0; j < 4; j++) {
+			struct opm_file_operator *fop = &fv.operators[j];
+			struct opm_voice_operator *op = &v->operators[j];
+			fop->ar = op->ks_ar & 0x1f;
+			fop->d1r = op->ame_d1r & 0x1f;
+			fop->d2r = op->dt2_d2r & 0x1f;
+			fop->rr = op->d1l_rr & 0x0f;
+			fop->d1l = op->d1l_rr >> 4;
+			fop->tl = op->tl & 0x7f;
+			fop->ks = op->ks_ar >> 6;
+			fop->mul = op->dt1_mul & 0x0f;
+			fop->dt1 = op->dt1_mul >> 4 & 0x07;
+			fop->dt2 = op->dt2_d2r >> 6;
+			fop->ame = op->ame_d1r >> 7;
+		}
+		opm_file_push_voice(&opm_file, &fv);
+	}
+
+	int is_stdout = opt_output && opt_output[0] == '-' && opt_output[1] == 0;
+	FILE *o = is_stdout ? stdout : fopen(opt_output, "w");
+	opm_file_save(&opm_file, write_fn, 0, o);
+	if(!is_stdout) fclose(o);
 
 	return 0;
 }
