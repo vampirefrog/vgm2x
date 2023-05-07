@@ -184,8 +184,10 @@ int main(int argc, char **argv) {
 		fv.ch_slot = 120;
 		fv.ch_ne = 0;
 		for(int j = 0; j < 4; j++) {
+			const uint8_t opmap[] = { 0, 2, 1, 3 };
+			const uint8_t dtmap[] = { 3, 4, 5, 6,  3, 2, 1, 0 };
 			struct opm_file_operator *fop = &fv.operators[j];
-			struct opm_voice_operator *op = &v->operators[j];
+			struct opm_voice_operator *op = &v->operators[opmap[j]];
 			fop->ar = op->ks_ar & 0x1f;
 			fop->d1r = op->ame_d1r & 0x1f;
 			fop->d2r = op->dt2_d2r & 0x1f;
@@ -194,7 +196,7 @@ int main(int argc, char **argv) {
 			fop->tl = op->tl & 0x7f;
 			fop->ks = op->ks_ar >> 6;
 			fop->mul = op->dt1_mul & 0x0f;
-			fop->dt1 = op->dt1_mul >> 4 & 0x07;
+			fop->dt1 = dtmap[op->dt1_mul >> 4 & 0x07];
 			fop->dt2 = op->dt2_d2r >> 6;
 			fop->ame = op->ame_d1r >> 7;
 		}

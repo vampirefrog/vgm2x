@@ -16,16 +16,14 @@ void opm_voice_collector_push_voice(struct opm_voice_collector *collector, struc
 	uint8_t min_tl = 127;
 
 	for(int i = 0, m = 1; i < 4; i++, m <<= 1) {
-		if(slot_mask & m) {
-			if(voice->operators[i].tl < min_tl)
-				min_tl = voice->operators[i].tl;
-		}
+		if(!(slot_mask & m)) continue;
+		if(voice->operators[i].tl >= min_tl) continue;
+		min_tl = voice->operators[i].tl;
 	}
 
 	for(int i = 0, m = 1; i < 4; i++, m <<= 1) {
-		if(slot_mask & m) {
-			voice->operators[i].tl -= min_tl;
-		}
+		if(!(slot_mask & m)) continue;
+		voice->operators[i].tl -= min_tl;
 	}
 
 	int existing_voice = -1;
@@ -53,18 +51,20 @@ void opm_voice_collector_push_voice(struct opm_voice_collector *collector, struc
 		existing_voice = i;
 		break;
 	}
-	if(existing_voice < 0) {
-		existing_voice = collector->num_voices++;
-		collector->voices = realloc(collector->voices, collector->num_voices * sizeof(struct opm_voice));
-		if(!collector->voices) {
-			fprintf(stderr, "Could not reallocate %d OPM voices\n", collector->num_voices);
-			return;
-		}
-		memcpy(&collector->voices[existing_voice], voice, sizeof(*voice));
-	} else {
+
+	if(existing_voice >= 0) {
 		struct opm_voice *v = &collector->voices[existing_voice];
 		v->chan_used_mask |= 1 << chan;
+		return;
 	}
+
+	collector->num_voices++;
+	collector->voices = realloc(collector->voices, collector->num_voices * sizeof(struct opm_voice));
+	if(!collector->voices) {
+		fprintf(stderr, "Could not reallocate %d OPM voices\n", collector->num_voices);
+		return;
+	}
+	memcpy(&collector->voices[collector->num_voices - 1], voice, sizeof(*voice));
 }
 
 void opm_voice_dump(struct opm_voice *v) {

@@ -54,68 +54,72 @@ void opn_voice_collector_push_voice(struct opn_voice_collector *collector, struc
 		break;
 	}
 
-	if(existing_voice < 0) {
-		existing_voice = collector->num_voices++;
-		collector->voices = realloc(collector->voices, collector->num_voices * sizeof(struct opn_voice));
-		if(!collector->voices) {
-			fprintf(stderr, "Could not reallocate %d OPN voices\n", collector->num_voices);
-			return;
-		}
-		memcpy(&collector->voices[existing_voice], voice, sizeof(*voice));
-	} else {
+	if(existing_voice >= 0) {
 		struct opn_voice *v = &collector->voices[existing_voice];
 		v->chan_used_mask |= 1 << chan;
+		return;
+	}
+
+	collector->num_voices++;
+	collector->voices = realloc(collector->voices, collector->num_voices * sizeof(struct opn_voice));
+	if(!collector->voices) {
+		fprintf(stderr, "Could not reallocate %d OPN voices\n", collector->num_voices);
+		return;
+	}
+	memcpy(&collector->voices[collector->num_voices - 1], voice, sizeof(*voice));
+}
+
+void opn_voice_dump(struct opn_voice *v) {
+	printf(
+		"fb=%d connect=%d chan_used_mask=%c%c%c%c%c%c%c%c\n",
+		v->fb_connect >> 3 & 0x07,
+		v->fb_connect & 0x07,
+		v->chan_used_mask & 1 ? '1' : '0',
+		v->chan_used_mask & 2 ? '1' : '0',
+		v->chan_used_mask & 4 ? '1' : '0',
+		v->chan_used_mask & 8 ? '1' : '0',
+		v->chan_used_mask & 16 ? '1' : '0',
+		v->chan_used_mask & 32 ? '1' : '0',
+		v->chan_used_mask & 64 ? '1' : '0',
+		v->chan_used_mask & 128 ? '1' : '0'
+	);
+	printf("OP AR DR SR RR SL  TL MUL DT KS AME SSG-EG\n");
+
+	for(int j = 0; j < 4; j++) {
+		struct opn_voice_operator *o = v->operators + j;
+		printf(
+			" %d"
+			" %2d"
+			" %2d"
+			" %2d"
+			" %2d"
+			" %2d"
+			" %3d"
+			"  %2d"
+			"  %d"
+			"  %d"
+			"   %d"
+			"      %d"
+			"\n",
+			j,
+			o->ks_ar & 0x1f,
+			o->am_dr & 0x1f,
+			o->sr & 0x1f,
+			o->sl_rr & 0x0f,
+			o->sl_rr >> 4,
+			o->tl & 0x7f,
+			o->dt_mul & 0x0f,
+			o->dt_mul >> 4 & 0x07,
+			o->ks_ar >> 6,
+			o->am_dr >> 7,
+			o->ssg_eg & 0x0f
+		);
 	}
 }
 
 void opn_voice_collector_dump_voices(struct opn_voice_collector *collector) {
 	for(int i = 0; i < collector->num_voices; i++) {
 		printf("Voice %d\n", i);
-		struct opn_voice *v = &collector->voices[i];
-		printf(
-			"fb=%d connect=%d chan_used_mask=%c%c%c%c%c%c%c%c\n",
-			v->fb_connect >> 3 & 0x07,
-			v->fb_connect & 0x07,
-			v->chan_used_mask & 1 ? '1' : '0',
-			v->chan_used_mask & 2 ? '1' : '0',
-			v->chan_used_mask & 4 ? '1' : '0',
-			v->chan_used_mask & 8 ? '1' : '0',
-			v->chan_used_mask & 16 ? '1' : '0',
-			v->chan_used_mask & 32 ? '1' : '0',
-			v->chan_used_mask & 64 ? '1' : '0',
-			v->chan_used_mask & 128 ? '1' : '0'
-		);
-		printf("OP AR DR SR RR SL  TL MUL DT KS AME SSG-EG\n");
-
-		for(int j = 0; j < 4; j++) {
-			struct opn_voice_operator *o = v->operators + j;
-			printf(
-				" %d"
-				" %2d"
-				" %2d"
-				" %2d"
-				" %2d"
-				" %2d"
-				"  %2d"
-				"  %2d"
-				"  %d"
-				"  %d"
-				"   %d"
-				"      %d"
-				"\n",
-				j,
-				o->ks_ar & 0x1f,
-				o->am_dr & 0x1f,
-				o->sr & 0x1f,
-				o->sl_rr & 0x0f,
-				o->sl_rr >> 4,
-				o->tl & 0x7f,
-				o->dt_mul & 0x0f,
-				o->dt_mul >> 4 & 0x07,
-				o->ks_ar >> 6,
-				o->am_dr >> 7,
-				o->ssg_eg & 0x0f
-			);
-		}
+		opn_voice_dump(collector->voices + i);
 	}
 }

@@ -4,7 +4,7 @@
 #include "opn_analyzer.h"
 
 static void opn_analyzer_push_voice(struct opn_analyzer *analyzer, uint8_t port, uint8_t chan, uint8_t mask) {
-	uint8_t *ofs = analyzer->regs + chan + port * 256;
+	uint8_t *ofs = &analyzer->regs[(chan & 0x03) | (chan & 0x04) << 6];
 
 	struct opn_voice voice;
 	voice.fb_connect = ofs[0xb0];
@@ -34,12 +34,11 @@ static void opn_cmd_port8_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_
 
 	if(reg == 0x28 && port == 0) {
 		uint8_t mask = data >> 4;
-		uint8_t chan = data & 0x03;
-		uint8_t key_port = data & 0x04 ? 1 : 0;
+		uint8_t chan = data & 0x07;
 
 		if(mask) {
 			// ignore DAC writes
-			if(chan == 2 && key_port == 1 && analyzer->ym_dac == 1)
+			if(chan == 6 && analyzer->ym_dac == 1)
 				return;
 			opn_analyzer_push_voice(analyzer, port, chan, mask);
 		}
