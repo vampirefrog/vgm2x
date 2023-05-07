@@ -184,10 +184,9 @@ int main(int argc, char **argv) {
 		fv.ch_slot = 120;
 		fv.ch_ne = 0;
 		for(int j = 0; j < 4; j++) {
-			const uint8_t opmap[] = { 0, 2, 1, 3 };
 			const uint8_t dtmap[] = { 3, 4, 5, 6,  3, 2, 1, 0 };
 			struct opm_file_operator *fop = &fv.operators[j];
-			struct opm_voice_operator *op = &v->operators[opmap[j]];
+			struct opm_voice_operator *op = &v->operators[j];
 			fop->ar = op->ks_ar & 0x1f;
 			fop->d1r = op->ame_d1r & 0x1f;
 			fop->d2r = op->dt2_d2r & 0x1f;
