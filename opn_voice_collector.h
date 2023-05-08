@@ -16,6 +16,7 @@ struct opn_voice {
 	uint8_t fb_connect;
 	int vgm_ofs;
 	uint8_t chan_used_mask;
+	uint8_t sm, lr_ams_pms;
 	struct opn_voice_operator operators[4];
 };
 

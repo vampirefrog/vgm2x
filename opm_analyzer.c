@@ -9,6 +9,8 @@ static void opm_analyzer_push_voice(struct opm_analyzer *analyzer, uint8_t chan,
 
 	struct opm_voice voice;
 	voice.fb_connect = ofs[0x20] & 0x3f;
+	voice.pms_ams = ofs[0x38] & 0x73;
+	voice.sm = mask;
 	// voice.vgm_ofs = vgm_ofs;
 	for(int i = 0; i < 4; i++) {
 		voice.operators[i].dt1_mul = ofs[0x40 + i * 8] & 0x7f;

@@ -16,6 +16,7 @@ struct opm_voice {
 	int vgm_ofs;
 	uint8_t chan_used_mask;
 	int note_usage[128];
+	uint8_t sm, pms_ams;
 	struct opm_voice_operator operators[4];
 };
 

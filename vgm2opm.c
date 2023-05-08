@@ -20,10 +20,10 @@ void opn_voice_to_opm_voice(struct opn_voice *opnv, struct opm_voice *opmv) {
 
 	/* per channel registers */
 	opmv->fb_connect = opnv->fb_connect & 0x3f;
-	// opnv->lr_ams_pms = (opmv->rl_fb_con & 0xc0) | (opmv->pms_ams & 0x03) << 4 | (opmv->pms_ams & 0x70) >> 3;
+	opmv->pms_ams = ((opnv->lr_ams_pms & 0x07) << 4) | ((opnv->lr_ams_pms >> 4) & 0x03);
 
 	// /* slot mask */
-	// opnv->sm = opmv->sm << 1;
+	opmv->sm = opnv->sm;
 
 	/* operators */
 	for(int j = 0; j < 4; j++) {
@@ -179,9 +179,9 @@ int main(int argc, char **argv) {
 		fv.ch_pan = 64;
 		fv.ch_fl = v->fb_connect >> 3 & 0x07;
 		fv.ch_con = v->fb_connect & 0x07;
-		fv.ch_ams = 0;
-		fv.ch_pms = 0;
-		fv.ch_slot = 120;
+		fv.ch_ams = v->pms_ams & 0x03;
+		fv.ch_pms = v->pms_ams >> 4 & 0x07;
+		fv.ch_slot = v->sm << 3;
 		fv.ch_ne = 0;
 		for(int j = 0; j < 4; j++) {
 			const uint8_t dtmap[] = { 3, 4, 5, 6,  3, 2, 1, 0 };

@@ -8,6 +8,8 @@ static void opn_analyzer_push_voice(struct opn_analyzer *analyzer, uint8_t port,
 
 	struct opn_voice voice;
 	voice.fb_connect = ofs[0xb0];
+	voice.lr_ams_pms = ofs[0xb4] & 0xf7;
+	voice.sm = mask;
 	// voice.vgm_ofs = vgm_ofs;
 	for(int i = 0; i < 4; i++) {
 		voice.operators[i].dt_mul   = ofs[0x30 + i * 4] & 0x7f;
