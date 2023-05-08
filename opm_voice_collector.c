@@ -64,6 +64,7 @@ void opm_voice_collector_push_voice(struct opm_voice_collector *collector, struc
 		fprintf(stderr, "Could not reallocate %d OPM voices\n", collector->num_voices);
 		return;
 	}
+	voice->chan_used_mask |= 1 << chan;
 	memcpy(&collector->voices[collector->num_voices - 1], voice, sizeof(*voice));
 }
 

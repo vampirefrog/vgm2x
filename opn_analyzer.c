@@ -60,7 +60,7 @@ void opn_analyzer_init(struct opn_analyzer *analyzer, int clock, int num_channel
 
 	opn_voice_collector_init(&analyzer->collector);
 
-	memset(analyzer->regs, 0, sizeof(analyzer->regs) / sizeof(analyzer->regs[0]));
+	memset(analyzer->regs, 0, sizeof(analyzer->regs));
 	analyzer->ym_dac = 0;
 	analyzer->num_channels = num_channels;
 }

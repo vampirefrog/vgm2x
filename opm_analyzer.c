@@ -50,5 +50,5 @@ void opm_analyzer_init(struct opm_analyzer *analyzer, int clock) {
 
 	opm_voice_collector_init(&analyzer->collector);
 
-	memset(analyzer->regs, 0, sizeof(analyzer->regs) / sizeof(analyzer->regs[0]));
+	memset(analyzer->regs, 0, sizeof(analyzer->regs));
 }

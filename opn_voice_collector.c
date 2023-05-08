@@ -13,8 +13,8 @@ void opn_voice_collector_push_voice(struct opn_voice_collector *collector, struc
 
 	// maximize volume
 	uint8_t slot_mask = slot_masks[voice->fb_connect & 0x07];
-
 	uint8_t min_tl = 127;
+
 	for(int i = 0, m = 1; i < 4; i++, m <<= 1) {
 		if(slot_mask & m) {
 			if(voice->operators[i].tl < min_tl)
@@ -66,6 +66,7 @@ void opn_voice_collector_push_voice(struct opn_voice_collector *collector, struc
 		fprintf(stderr, "Could not reallocate %d OPN voices\n", collector->num_voices);
 		return;
 	}
+	voice->chan_used_mask |= 1 << chan;
 	memcpy(&collector->voices[collector->num_voices - 1], voice, sizeof(*voice));
 }
 
