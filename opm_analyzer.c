@@ -5,10 +5,10 @@
 #include "opm_analyzer.h"
 
 static void opm_analyzer_push_voice(struct opm_analyzer *analyzer, uint8_t chan, uint8_t mask) {
-	uint8_t *ofs = analyzer->regs;
+	uint8_t *ofs = analyzer->regs + chan;
 
 	struct opm_voice voice;
-	voice.fb_connect = ofs[0x20];
+	voice.fb_connect = ofs[0x20] & 0x3f;
 	// voice.vgm_ofs = vgm_ofs;
 	for(int i = 0; i < 4; i++) {
 		voice.operators[i].dt1_mul = ofs[0x40 + i * 8] & 0x7f;
