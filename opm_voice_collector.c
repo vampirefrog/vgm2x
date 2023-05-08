@@ -13,17 +13,17 @@ void opm_voice_collector_push_voice(struct opm_voice_collector *collector, struc
 
 	/* Fix volume */
 	uint8_t slot_mask = slot_masks[voice->fb_connect & 0x07];
-	uint8_t min_tl = 127;
 
+	uint8_t min_tl = 127;
 	for(int i = 0, m = 1; i < 4; i++, m <<= 1) {
-		if(!(slot_mask & m)) continue;
-		if(voice->operators[i].tl >= min_tl) continue;
-		min_tl = voice->operators[i].tl;
+		if(slot_mask & m)
+			if(voice->operators[i].tl < min_tl)
+				min_tl = voice->operators[i].tl;
 	}
 
 	for(int i = 0, m = 1; i < 4; i++, m <<= 1) {
-		if(!(slot_mask & m)) continue;
-		voice->operators[i].tl -= min_tl;
+		if(slot_mask & m)
+			voice->operators[i].tl -= min_tl;
 	}
 
 	int existing_voice = -1;
