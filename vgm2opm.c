@@ -77,6 +77,7 @@ static void init_chip(enum vgm_chip_id chip_id, int clock, void *data_ptr) {
 			add_analyzer((struct chip_analyzer *)opm_analyzer_new(clock), chip_id);
 			break;
 		default:
+			break;
 	}
 }
 
