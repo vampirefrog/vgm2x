@@ -54,7 +54,7 @@ static void add_analyzer(struct chip_analyzer *a, int id) {
 	analyzers_by_id[id] = a;
 }
 
-static void init_chip(enum vgm_chip_id chip_id, int clock, void *data_ptr) {
+static void init_chip_fn(enum vgm_chip_id chip_id, int clock, void *data_ptr) {
 	if(analyzers_by_id[chip_id]) return;
 
 	switch(chip_id) {
@@ -81,21 +81,21 @@ static void init_chip(enum vgm_chip_id chip_id, int clock, void *data_ptr) {
 	}
 }
 
-static void write_reg8_data8(enum vgm_chip_id chip_id, uint8_t reg, uint8_t data, void *data_ptr) {
+static void write_reg8_data8_fn(enum vgm_chip_id chip_id, uint8_t reg, uint8_t data, void *data_ptr) {
 	if(!analyzers_by_id[chip_id]) return;
 	chip_analyzer_cmd_reg8_data8(analyzers_by_id[chip_id], reg, data);
 }
 
-static void write_port8_reg8_data8(enum vgm_chip_id chip_id, uint8_t port, uint8_t reg, uint8_t data, void *data_ptr) {
+static void write_port8_reg8_data8_fn(enum vgm_chip_id chip_id, uint8_t port, uint8_t reg, uint8_t data, void *data_ptr) {
 	if(!analyzers_by_id[chip_id]) return;
 	chip_analyzer_cmd_port8_reg8_data8(analyzers_by_id[chip_id], port, reg, data);
 }
 
-static void wait(int samples, void *data_ptr) {
+static void wait_fn(int samples, void *data_ptr) {
 	// printf("wait %d\n", samples);
 }
 
-static void end(void *data_ptr) {
+static void end_fn(void *data_ptr) {
 	// printf("end\n");
 }
 
@@ -124,11 +124,11 @@ int main(int argc, char **argv) {
 		uint8_t *buf = load_gzfile(argv[i], &s);
 		struct vgm_interpreter interpreter;
 		vgm_interpreter_init(&interpreter);
-		interpreter.init_chip = init_chip;
-		interpreter.write_reg8_data8 = write_reg8_data8;
-		interpreter.write_port8_reg8_data8 = write_port8_reg8_data8;
-		interpreter.wait = wait;
-		interpreter.end = end;
+		interpreter.init_chip = init_chip_fn;
+		interpreter.write_reg8_data8 = write_reg8_data8_fn;
+		interpreter.write_port8_reg8_data8 = write_port8_reg8_data8_fn;
+		interpreter.wait = wait_fn;
+		interpreter.end = end_fn;
 		struct vgm_error error;
 		enum vgm_error_code e = vgm_interpreter_run(&interpreter, buf, s, &error);
 		if(e != SUCCESS) {
