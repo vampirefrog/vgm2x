@@ -103,6 +103,7 @@ size_t write_fn(void *buf, size_t bufsize, void *data_ptr) {
 }
 
 char *opt_output = "-";
+int opt_csv = 0;
 int main(int argc, char **argv) {
 	int optind = cmdline_parse_args(argc, argv, (struct cmdline_option[]){
 		{
@@ -111,6 +112,13 @@ int main(int argc, char **argv) {
 			"name",
 			TYPE_OPTIONAL,
 			TYPE_STRING, &opt_output
+		},
+		{
+			'c', "csv",
+			"Output CSV instead",
+			NULL,
+			TYPE_OPTIONAL,
+			TYPE_NONE, &opt_csv
 		},
 
 		CMDLINE_ARG_TERMINATOR
@@ -166,6 +174,46 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	if(opt_csv) {
+		printf("FB\tCON\tPMS\tAMS\tSLOT");
+		for(int i = 0; i < 4; i++) {
+			printf("\tAR\tD1R\tD2R\tRR\tD1L\tTL\tKS\tMUL\tDT1\tDT2\tAMS-EN");
+		}
+		printf("\n");
+		for(int i = 0; i < collector.num_voices; i++) {
+			struct opm_voice *v = collector.voices + i;
+			printf(
+				"%d\t%d\t%d\t%d\t%d",
+				v->fb_connect >> 3 & 0x07,
+				v->fb_connect & 0x07,
+				v->pms_ams >> 4 & 0x07,
+				v->pms_ams & 0x03,
+				v->sm
+			);
+			for(int j = 0; j < 4; j++) {
+				const uint8_t dtmap[] = { 3, 4, 5, 6,  3, 2, 1, 0 };
+				struct opm_voice_operator *op = &v->operators[j];
+				printf(
+					"\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
+					op->ks_ar & 0x1f,
+					op->ame_d1r & 0x1f,
+					op->dt2_d2r & 0x1f,
+					op->d1l_rr & 0x0f,
+					op->d1l_rr >> 4,
+					op->tl & 0x7f,
+					op->ks_ar >> 6,
+					op->dt1_mul & 0x0f,
+					dtmap[op->dt1_mul >> 4 & 0x07],
+					op->dt2_d2r >> 6,
+					op->ame_d1r >> 7
+				);
+			}
+			printf("\n");
+		}
+
+		return 0;
+	}
+
 	struct opm_file opm_file;
 	opm_file_init(&opm_file);
 	for(int i = 0; i < collector.num_voices; i++) {
@@ -182,8 +230,8 @@ int main(int argc, char **argv) {
 		fv.ch_pan = 64;
 		fv.ch_fl = v->fb_connect >> 3 & 0x07;
 		fv.ch_con = v->fb_connect & 0x07;
-		fv.ch_ams = v->pms_ams & 0x03;
 		fv.ch_pms = v->pms_ams >> 4 & 0x07;
+		fv.ch_ams = v->pms_ams & 0x03;
 		fv.ch_slot = v->sm << 3;
 		fv.ch_ne = 0;
 		for(int j = 0; j < 4; j++) {
