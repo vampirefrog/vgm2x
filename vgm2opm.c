@@ -11,14 +11,6 @@
 
 #include "libfmvoice/opm_file.h"
 
-void opn_voice_to_opm_voice(struct opn_voice_collector_voice *opnv, struct opm_voice_collector_voice *opmv) {
-	opmv->vgm_ofs = opnv->vgm_ofs;
-	opmv->chan_used_mask = opnv->chan_used_mask;
-	memcpy(opmv->note_usage, opnv->note_usage, sizeof(opnv->note_usage));
-
-	opm_voice_load_opn_voice(&opmv->voice, &opnv->voice);
-}
-
 struct chip_analyzer **analyzers = 0;
 int num_chip_analyzers = 0;
 struct chip_analyzer *analyzers_by_id[256];
@@ -149,7 +141,10 @@ int main(int argc, char **argv) {
 			for(int i = 0; i < a->collector.num_voices; i++) {
 				struct opn_voice_collector_voice *opnv = a->collector.voices + i;
 				struct opm_voice_collector_voice opmv;
-				opn_voice_to_opm_voice(opnv, &opmv);
+				opmv.vgm_ofs = opnv->vgm_ofs;
+				opmv.chan_used_mask = opnv->chan_used_mask;
+				memcpy(opmv.note_usage, opnv->note_usage, sizeof(opnv->note_usage));
+				opm_voice_load_opn_voice(&opmv.voice, &opnv->voice);
 				opm_voice_collector_push_voice(&collector, &opmv, 0);
 			}
 		}
