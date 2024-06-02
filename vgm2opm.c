@@ -150,8 +150,11 @@ int main(int argc, char **argv) {
 		if(!analyzers_by_id[ids[i]]) continue;
 		if(ids[i] == YM2151 || ids[i] == SECOND_YM2151) {
 			struct opm_analyzer *a = (struct opm_analyzer *)analyzers_by_id[ids[i]];
-			for(int i = 0; i < a->collector.num_voices; i++)
-				opm_voice_collector_push_voice(&collector, a->collector.voices + i, 0);
+			for(int i = 0; i < a->collector.num_voices; i++) {
+				struct opm_voice opmv;
+				memcpy(&opmv, a->collector.voices + i, sizeof(opmv));
+				opm_voice_collector_push_voice(&collector, &opmv, 0);
+			}
 		} else {
 			struct opn_analyzer *a = (struct opn_analyzer *)analyzers_by_id[ids[i]];
 			for(int i = 0; i < a->collector.num_voices; i++) {
