@@ -216,50 +216,15 @@ int main(int argc, char **argv) {
 	}
 
 	struct fm_voice_bank bank;
-
-
-	struct opm_file opm_file;
-	opm_file_init(&opm_file);
+	fm_voice_bank_init(&bank);
 	for(int i = 0; i < collector.num_voices; i++) {
 		struct opm_voice_collector_voice *v = collector.voices + i;
-		struct opm_file_voice fv;
-		memset(&fv, 0, sizeof(fv));
-		fv.number = i;
-		snprintf(fv.name, sizeof(fv.name), "Instrument %d", i);
-		fv.lfo_lfrq = 0;
-		fv.lfo_amd = 0;
-		fv.lfo_pmd = 0;
-		fv.lfo_wf = 0;
-		fv.nfrq = 0;
-		fv.ch_pan = 64;
-		fv.ch_fl = v->voice.rl_fb_con >> 3 & 0x07;
-		fv.ch_con = v->voice.rl_fb_con & 0x07;
-		fv.ch_pms = v->voice.pms_ams >> 4 & 0x07;
-		fv.ch_ams = v->voice.pms_ams & 0x03;
-		fv.ch_slot = v->voice.slot << 3;
-		fv.ch_ne = 0;
-		for(int j = 0; j < 4; j++) {
-			const uint8_t dtmap[] = { 3, 4, 5, 6,  3, 2, 1, 0 };
-			struct opm_file_operator *fop = &fv.operators[j];
-			struct opm_voice_operator *op = &v->voice.operators[j];
-			fop->ar = op->ks_ar & 0x1f;
-			fop->d1r = op->ams_d1r & 0x1f;
-			fop->d2r = op->dt2_d2r & 0x1f;
-			fop->rr = op->d1l_rr & 0x0f;
-			fop->d1l = op->d1l_rr >> 4;
-			fop->tl = op->tl & 0x7f;
-			fop->ks = op->ks_ar >> 6;
-			fop->mul = op->dt1_mul & 0x0f;
-			fop->dt1 = dtmap[op->dt1_mul >> 4 & 0x07];
-			fop->dt2 = op->dt2_d2r >> 6;
-			fop->ame = op->ams_d1r >> 7;
-		}
-		opm_file_push_voice(&opm_file, &fv);
+		fm_voice_bank_append_opm_voice(&bank, &v->voice);
 	}
 
 	int is_stdout = opt_output && opt_output[0] == '-' && opt_output[1] == 0;
 	FILE *o = is_stdout ? stdout : fopen(opt_output, "w");
-	opm_file_save(&opm_file, write_fn, 0, o);
+	fm_voice_bank_save(&bank, FORMAT_OPM, write_fn, o);
 	if(!is_stdout) fclose(o);
 
 	return 0;

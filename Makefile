@@ -1,20 +1,23 @@
 CC=gcc
 CFLAGS=-Wall -ggdb
-LDFLAGS=-lz
+LDFLAGS=-lz -lm
 VGMDIR=
 
 .PHONY: all extract
 
 all: vgm2opm
 
-vgm2opm: vgm2opm.o cmdline.o tools.o chip_analyzer.o opn_analyzer.o opn_voice_collector.o opm_analyzer.o opm_voice_collector.o vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o libfmvoice/opm_file.o
+vgm2opm: vgm2opm.o cmdline.o tools.o chip_analyzer.o opn_analyzer.o opn_voice_collector.o opm_analyzer.o opm_voice_collector.o vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o libfmvoice/libfmvoice.a
 	$(CC) $^ -o $@ $(LDFLAGS)
+libfmvoice/libfmvoice.a:
+	cd libfmvoice && make libfmvoice.a
 
 %.o: %.c
 	$(CC) -MMD -c $< -o $@ $(CFLAGS)
 
 clean:
 	rm -f *.o *.d vgm2opm
+	cd libfmvoice && make clean
 
 extract: vgm2opm
 	$(if $(VGMDIR),,$(error Please set VGMDIR for extraction))
