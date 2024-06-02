@@ -9,49 +9,15 @@ void opn_voice_collector_init(struct opn_voice_collector *collector) {
 }
 
 void opn_voice_collector_push_voice(struct opn_voice_collector *collector, struct opn_voice_collector_voice *voice, int chan) {
-	const uint8_t slot_masks[8] = { 0x08,0x08,0x08,0x08,0x0c,0x0e,0x0e,0x0f };
-
-	// maximize volume
-	uint8_t slot_mask = slot_masks[voice->voice.fb_con & 0x07];
-	uint8_t min_tl = 127;
-
-	for(int i = 0, m = 1; i < 4; i++, m <<= 1) {
-		if(slot_mask & m) {
-			if(voice->voice.operators[i].tl < min_tl)
-				min_tl = voice->voice.operators[i].tl;
-		}
-	}
-
-	for(int i = 0, m = 1; i < 4; i++, m <<= 1) {
-		if(slot_mask & m) {
-			voice->voice.operators[i].tl -= min_tl;
-		}
-	}
+	opn_voice_normalize(&voice->voice);
 
 	int existing_voice = -1;
 	for(int i = 0; i < collector->num_voices; i++) {
 		struct opn_voice_collector_voice *v = collector->voices + i;
-		if(v->voice.fb_con != voice->voice.fb_con) continue;
-		int good = 1;
-		for(int j = 0, m = 1; j < 4; j++, m <<= 1) {
-			struct opn_voice_operator *o1 = &v->voice.operators[j];
-			struct opn_voice_operator *o2 = &voice->voice.operators[j];
-			if(
-				(o1->dt_mul & 0x7f) != (o2->dt_mul & 0x7f) ||
-				(o1->ks_ar & 0xdf) != (o2->ks_ar & 0xdf) ||
-				(o1->am_dr & 0x9f) != (o2->am_dr & 0x9f) ||
-				(o1->sr & 0x1f) != (o2->sr & 0x1f) ||
-				(o1->tl & 0x7f) != (o2->tl & 0x7f) ||
-				(o1->sl_rr) != (o2->sl_rr)
-			) {
-				good = 0;
-				break;
-			}
+		if(!opn_voice_compare(&voice->voice, &v->voice)) {
+			existing_voice = i;
+			break;
 		}
-		if(!good) continue;
-
-		existing_voice = i;
-		break;
 	}
 
 	if(existing_voice >= 0) {
