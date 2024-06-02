@@ -14,29 +14,9 @@
 void opn_voice_to_opm_voice(struct opn_voice_collector_voice *opnv, struct opm_voice_collector_voice *opmv) {
 	opmv->vgm_ofs = opnv->vgm_ofs;
 	opmv->chan_used_mask = opnv->chan_used_mask;
+	memcpy(opmv->note_usage, opnv->note_usage, sizeof(opnv->note_usage));
 
-	/* per chip registers */
-	// opnv->lfo = opmv->lfrq >> 4;
-
-	/* per channel registers */
-	opmv->voice.rl_fb_con = opnv->voice.fb_con & 0x3f;
-	opmv->voice.pms_ams = ((opnv->voice.lr_ams_pms & 0x07) << 4) | ((opnv->voice.lr_ams_pms >> 4) & 0x03);
-
-	// /* slot mask */
-	opmv->voice.slot = opnv->voice.slot;
-
-	/* operators */
-	for(int j = 0; j < 4; j++) {
-		struct opn_voice_operator *nop = &opnv->voice.operators[j];
-		struct opm_voice_operator *mop = &opmv->voice.operators[j];
-
-		mop->dt1_mul = nop->dt_mul & 0x7f;
-		mop->tl = nop->tl & 0x7f;
-		mop->ks_ar = nop->ks_ar & 0xdf;
-		mop->ams_d1r = nop->am_dr & 0x9f;
-		mop->dt2_d2r = nop->sr & 0x1f;
-		mop->d1l_rr = nop->sl_rr;
-	}
+	opm_voice_load_opn_voice(&opmv->voice, &opnv->voice);
 }
 
 struct chip_analyzer **analyzers = 0;
