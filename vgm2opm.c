@@ -11,7 +11,7 @@
 
 #include "libfmvoice/opm_file.h"
 
-void opn_voice_to_opm_voice(struct opn_voice *opnv, struct opm_voice *opmv) {
+void opn_voice_to_opm_voice(struct opn_voice_collector_voice *opnv, struct opm_voice_collector_voice *opmv) {
 	opmv->vgm_ofs = opnv->vgm_ofs;
 	opmv->chan_used_mask = opnv->chan_used_mask;
 
@@ -19,21 +19,21 @@ void opn_voice_to_opm_voice(struct opn_voice *opnv, struct opm_voice *opmv) {
 	// opnv->lfo = opmv->lfrq >> 4;
 
 	/* per channel registers */
-	opmv->fb_connect = opnv->fb_connect & 0x3f;
-	opmv->pms_ams = ((opnv->lr_ams_pms & 0x07) << 4) | ((opnv->lr_ams_pms >> 4) & 0x03);
+	opmv->voice.rl_fb_con = opnv->voice.fb_con & 0x3f;
+	opmv->voice.pms_ams = ((opnv->voice.lr_ams_pms & 0x07) << 4) | ((opnv->voice.lr_ams_pms >> 4) & 0x03);
 
 	// /* slot mask */
-	opmv->sm = opnv->sm;
+	opmv->voice.slot = opnv->voice.slot;
 
 	/* operators */
 	for(int j = 0; j < 4; j++) {
-		struct opn_voice_operator *nop = &opnv->operators[j];
-		struct opm_voice_operator *mop = &opmv->operators[j];
+		struct opn_voice_operator *nop = &opnv->voice.operators[j];
+		struct opm_voice_operator *mop = &opmv->voice.operators[j];
 
 		mop->dt1_mul = nop->dt_mul & 0x7f;
 		mop->tl = nop->tl & 0x7f;
 		mop->ks_ar = nop->ks_ar & 0xdf;
-		mop->ame_d1r = nop->am_dr & 0x9f;
+		mop->ams_d1r = nop->am_dr & 0x9f;
 		mop->dt2_d2r = nop->sr & 0x1f;
 		mop->d1l_rr = nop->sl_rr;
 	}
@@ -160,15 +160,15 @@ int main(int argc, char **argv) {
 		if(ids[i] == YM2151 || ids[i] == SECOND_YM2151) {
 			struct opm_analyzer *a = (struct opm_analyzer *)analyzers_by_id[ids[i]];
 			for(int i = 0; i < a->collector.num_voices; i++) {
-				struct opm_voice opmv;
+				struct opm_voice_collector_voice opmv;
 				memcpy(&opmv, a->collector.voices + i, sizeof(opmv));
 				opm_voice_collector_push_voice(&collector, &opmv, 0);
 			}
 		} else {
 			struct opn_analyzer *a = (struct opn_analyzer *)analyzers_by_id[ids[i]];
 			for(int i = 0; i < a->collector.num_voices; i++) {
-				struct opn_voice *opnv = a->collector.voices + i;
-				struct opm_voice opmv;
+				struct opn_voice_collector_voice *opnv = a->collector.voices + i;
+				struct opm_voice_collector_voice opmv;
 				opn_voice_to_opm_voice(opnv, &opmv);
 				opm_voice_collector_push_voice(&collector, &opmv, 0);
 			}
@@ -182,22 +182,22 @@ int main(int argc, char **argv) {
 		}
 		printf("\n");
 		for(int i = 0; i < collector.num_voices; i++) {
-			struct opm_voice *v = collector.voices + i;
+			struct opm_voice_collector_voice *v = collector.voices + i;
 			printf(
 				"%d\t%d\t%d\t%d\t%d",
-				v->fb_connect >> 3 & 0x07,
-				v->fb_connect & 0x07,
-				v->pms_ams >> 4 & 0x07,
-				v->pms_ams & 0x03,
-				v->sm
+				v->voice.rl_fb_con >> 3 & 0x07,
+				v->voice.rl_fb_con & 0x07,
+				v->voice.pms_ams >> 4 & 0x07,
+				v->voice.pms_ams & 0x03,
+				v->voice.slot
 			);
 			for(int j = 0; j < 4; j++) {
 				const uint8_t dtmap[] = { 3, 4, 5, 6,  3, 2, 1, 0 };
-				struct opm_voice_operator *op = &v->operators[j];
+				struct opm_voice_operator *op = &v->voice.operators[j];
 				printf(
 					"\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
 					op->ks_ar & 0x1f,
-					op->ame_d1r & 0x1f,
+					op->ams_d1r & 0x1f,
 					op->dt2_d2r & 0x1f,
 					op->d1l_rr & 0x0f,
 					op->d1l_rr >> 4,
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
 					op->dt1_mul & 0x0f,
 					dtmap[op->dt1_mul >> 4 & 0x07],
 					op->dt2_d2r >> 6,
-					op->ame_d1r >> 7
+					op->ams_d1r >> 7
 				);
 			}
 			printf("\n");
@@ -215,10 +215,13 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
+	struct fm_voice_bank bank;
+
+
 	struct opm_file opm_file;
 	opm_file_init(&opm_file);
 	for(int i = 0; i < collector.num_voices; i++) {
-		struct opm_voice *v = collector.voices + i;
+		struct opm_voice_collector_voice *v = collector.voices + i;
 		struct opm_file_voice fv;
 		memset(&fv, 0, sizeof(fv));
 		fv.number = i;
@@ -229,18 +232,18 @@ int main(int argc, char **argv) {
 		fv.lfo_wf = 0;
 		fv.nfrq = 0;
 		fv.ch_pan = 64;
-		fv.ch_fl = v->fb_connect >> 3 & 0x07;
-		fv.ch_con = v->fb_connect & 0x07;
-		fv.ch_pms = v->pms_ams >> 4 & 0x07;
-		fv.ch_ams = v->pms_ams & 0x03;
-		fv.ch_slot = v->sm << 3;
+		fv.ch_fl = v->voice.rl_fb_con >> 3 & 0x07;
+		fv.ch_con = v->voice.rl_fb_con & 0x07;
+		fv.ch_pms = v->voice.pms_ams >> 4 & 0x07;
+		fv.ch_ams = v->voice.pms_ams & 0x03;
+		fv.ch_slot = v->voice.slot << 3;
 		fv.ch_ne = 0;
 		for(int j = 0; j < 4; j++) {
 			const uint8_t dtmap[] = { 3, 4, 5, 6,  3, 2, 1, 0 };
 			struct opm_file_operator *fop = &fv.operators[j];
-			struct opm_voice_operator *op = &v->operators[j];
+			struct opm_voice_operator *op = &v->voice.operators[j];
 			fop->ar = op->ks_ar & 0x1f;
-			fop->d1r = op->ame_d1r & 0x1f;
+			fop->d1r = op->ams_d1r & 0x1f;
 			fop->d2r = op->dt2_d2r & 0x1f;
 			fop->rr = op->d1l_rr & 0x0f;
 			fop->d1l = op->d1l_rr >> 4;
@@ -249,7 +252,7 @@ int main(int argc, char **argv) {
 			fop->mul = op->dt1_mul & 0x0f;
 			fop->dt1 = dtmap[op->dt1_mul >> 4 & 0x07];
 			fop->dt2 = op->dt2_d2r >> 6;
-			fop->ame = op->ame_d1r >> 7;
+			fop->ame = op->ams_d1r >> 7;
 		}
 		opm_file_push_voice(&opm_file, &fv);
 	}
