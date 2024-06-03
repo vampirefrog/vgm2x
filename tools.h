@@ -7,8 +7,6 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-uint8_t *load_file(const char *filename, size_t *size_out);
-uint8_t *load_gzfile(const char *filename, size_t *size_out);
 int gcd(int a, int b); /* Greatest Common Divisor */
 void csv_quote(char *str, size_t len);
 
