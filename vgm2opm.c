@@ -9,6 +9,7 @@
 #include "opm_voice_collector.h"
 #include "opm_analyzer.h"
 #include "opn_analyzer.h"
+#include "libvgm/utils/FileLoader.h"
 
 size_t write_fn(void *buf, size_t bufsize, void *data_ptr) {
 	return fwrite(buf, 1, bufsize, (FILE *)data_ptr);
@@ -42,11 +43,21 @@ int main(int argc, char **argv) {
 	vgm_analyzer_init(&va);
 
 	for(int i = optind; i < argc; i++) {
-		size_t s = 0;
-		uint8_t *buf = load_gzfile(argv[i], &s);
-		int r = vgm_analyzer_run(&va, buf, s);
+		DATA_LOADER *dload = FileLoader_Init(argv[i]);
+		if(!dload) {
+			fprintf(stderr, "Could not init loader for %s\n", argv[i]);
+			continue;
+		}
+		if(DataLoader_Load(dload)) {
+			fprintf(stderr, "Could not load %s\n", argv[i]);
+			DataLoader_Deinit(dload);
+			continue;
+		}
+		DataLoader_ReadAll(dload);
+		uint8_t *buf = DataLoader_GetData(dload);
+		int r = vgm_analyzer_run(&va, DataLoader_GetData(dload), DataLoader_GetSize(dload));
 		if(r) fprintf(stderr, "Could not analyze %s: error %d\n", argv[i], r);
-		free(buf);
+		DataLoader_Deinit(dload);
 	}
 
 	struct opm_voice_collector collector;

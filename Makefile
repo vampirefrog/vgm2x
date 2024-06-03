@@ -7,7 +7,7 @@ VGMDIR=
 
 all: vgm2opm
 
-vgm2opm: vgm2opm.o cmdline.o tools.o libvgm2x.a vgm/libvgminterpreter.a libfmvoice/libfmvoice.a
+vgm2opm: vgm2opm.o cmdline.o tools.o libvgm2x.a vgm/libvgminterpreter.a libfmvoice/libfmvoice.a libvgm/utils/DataLoader.o libvgm/utils/FileLoader.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 vgm/libvgminterpreter.a: vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o
 	ar cr $@ $^
