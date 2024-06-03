@@ -5,71 +5,10 @@
 
 #include "cmdline.h"
 #include "tools.h"
-#include "vgm/interpreter.h"
-#include "opn_analyzer.h"
+#include "vgm_analyzer.h"
+#include "opm_voice_collector.h"
 #include "opm_analyzer.h"
-
-#include "libfmvoice/opm_file.h"
-
-struct chip_analyzer **analyzers = 0;
-int num_chip_analyzers = 0;
-struct chip_analyzer *analyzers_by_id[256];
-
-static void add_analyzer(struct chip_analyzer *a, int id) {
-	num_chip_analyzers++;
-	analyzers = realloc(analyzers, num_chip_analyzers * sizeof(*analyzers));
-	if(!analyzers) {
-		fprintf(stderr, "Could not reallocate %d analyzers\n", num_chip_analyzers);
-		return;
-	}
-	analyzers[num_chip_analyzers - 1] = a;
-	analyzers_by_id[id] = a;
-}
-
-static void init_chip_fn(enum vgm_chip_id chip_id, int clock, void *data_ptr) {
-	if(analyzers_by_id[chip_id]) return;
-
-	switch(chip_id) {
-		case YM2612:
-		case YM2203:
-		case YM2608:
-		case YM2610:
-		case YM3812:
-		case YM3526:
-		case SECOND_YM2612:
-		case SECOND_YM2203:
-		case SECOND_YM2608:
-		case SECOND_YM2610:
-		case SECOND_YM3812:
-		case SECOND_YM3526:
-			add_analyzer((struct chip_analyzer *)opn_analyzer_new(clock, chip_id == YM2203 || chip_id == SECOND_YM2203 ? 3 : 6), chip_id);
-			break;
-		case YM2151:
-		case SECOND_YM2151:
-			add_analyzer((struct chip_analyzer *)opm_analyzer_new(clock), chip_id);
-			break;
-		default:
-			break;
-	}
-}
-
-static void write_reg8_data8_fn(enum vgm_chip_id chip_id, uint8_t reg, uint8_t data, void *data_ptr) {
-	if(!analyzers_by_id[chip_id]) return;
-	chip_analyzer_cmd_reg8_data8(analyzers_by_id[chip_id], reg, data);
-}
-
-static void write_port8_reg8_data8_fn(enum vgm_chip_id chip_id, uint8_t port, uint8_t reg, uint8_t data, void *data_ptr) {
-	if(!analyzers_by_id[chip_id]) return;
-	chip_analyzer_cmd_port8_reg8_data8(analyzers_by_id[chip_id], port, reg, data);
-}
-
-static void wait_fn(int samples, void *data_ptr) {
-	// printf("wait %d\n", samples);
-}
-
-static void end_fn(void *data_ptr) {
-	// printf("end\n");
-}
+#include "opn_analyzer.h"
 
 size_t write_fn(void *buf, size_t bufsize, void *data_ptr) {
 	return fwrite(buf, 1, bufsize, (FILE *)data_ptr);
@@ -99,20 +38,14 @@ int main(int argc, char **argv) {
 
 	if(optind < 0) exit(-optind);
 
+	struct vgm_analyzer va;
+	vgm_analyzer_init(&va);
+
 	for(int i = optind; i < argc; i++) {
 		size_t s = 0;
 		uint8_t *buf = load_gzfile(argv[i], &s);
-		struct vgm_interpreter interpreter;
-		vgm_interpreter_init(&interpreter);
-		interpreter.init_chip = init_chip_fn;
-		interpreter.write_reg8_data8 = write_reg8_data8_fn;
-		interpreter.write_port8_reg8_data8 = write_port8_reg8_data8_fn;
-		interpreter.wait = wait_fn;
-		interpreter.end = end_fn;
-		struct vgm_error error;
-		enum vgm_error_code e = vgm_interpreter_run(&interpreter, buf, s, &error);
-		if(e != SUCCESS) {
-		}
+		int r = vgm_analyzer_run(&va, buf, s);
+		if(r) fprintf(stderr, "Could not analyze %s: error %d\n", argv[i], r);
 		free(buf);
 	}
 
@@ -128,16 +61,16 @@ int main(int argc, char **argv) {
 		YM3526, SECOND_YM3526,
 	};
 	for(int i = 0; i < sizeof(ids) / sizeof(ids[0]); i++) {
-		if(!analyzers_by_id[ids[i]]) continue;
+		if(!va.analyzers_by_id[ids[i]]) continue;
 		if(ids[i] == YM2151 || ids[i] == SECOND_YM2151) {
-			struct opm_analyzer *a = (struct opm_analyzer *)analyzers_by_id[ids[i]];
+			struct opm_analyzer *a = (struct opm_analyzer *)va.analyzers_by_id[ids[i]];
 			for(int i = 0; i < a->collector.num_voices; i++) {
 				struct opm_voice_collector_voice opmv;
 				memcpy(&opmv, a->collector.voices + i, sizeof(opmv));
 				opm_voice_collector_push_voice(&collector, &opmv, 0);
 			}
 		} else {
-			struct opn_analyzer *a = (struct opn_analyzer *)analyzers_by_id[ids[i]];
+			struct opn_analyzer *a = (struct opn_analyzer *)va.analyzers_by_id[ids[i]];
 			for(int i = 0; i < a->collector.num_voices; i++) {
 				struct opn_voice_collector_voice *opnv = a->collector.voices + i;
 				struct opm_voice_collector_voice opmv;

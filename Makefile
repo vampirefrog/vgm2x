@@ -7,7 +7,7 @@ VGMDIR=
 
 all: vgm2opm
 
-vgm2opm: vgm2opm.o cmdline.o tools.o chip_analyzer.o opn_analyzer.o opn_voice_collector.o opm_analyzer.o opm_voice_collector.o vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o libfmvoice/libfmvoice.a
+vgm2opm: vgm2opm.o cmdline.o tools.o chip_analyzer.o opn_analyzer.o opn_voice_collector.o opm_analyzer.o opm_voice_collector.o vgm_analyzer.o vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o libfmvoice/libfmvoice.a
 	$(CC) $^ -o $@ $(LDFLAGS)
 libfmvoice/libfmvoice.a:
 	cd libfmvoice && make libfmvoice.a
@@ -16,7 +16,7 @@ libfmvoice/libfmvoice.a:
 	$(CC) -MMD -c $< -o $@ $(CFLAGS)
 
 clean:
-	rm -f *.o *.d vgm2opm
+	rm -f *.o vgm/*.o *.d vgm/*.d vgm2opm
 	cd libfmvoice && make clean
 
 extract: vgm2opm

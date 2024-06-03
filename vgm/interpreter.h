@@ -6,7 +6,7 @@
 #include "error.h"
 
 struct vgm_interpreter {
-	void (*init_chip)(enum vgm_chip_id, int clock, void *data_ptr);
+	int (*init_chip)(enum vgm_chip_id, int clock, void *data_ptr);
 	void (*init_sn_chip)(enum vgm_chip_id, int clock, uint16_t feedback, uint8_t sr_width, uint8_t flags);
 	void (*init_ay_chip)(enum vgm_chip_id, int clock, uint8_t flags, uint8_t ym2203_flags, uint8_t ym2608_flags);
 	void (*init_chip_flags8)(enum vgm_chip_id, int clock, uint8_t flags);
