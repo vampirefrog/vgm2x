@@ -86,7 +86,6 @@ int vgm_analyzer_run(struct vgm_analyzer *analyzer, uint8_t *buf, size_t s) {
 	analyzer->interpreter.end = end_fn;
 	analyzer->interpreter.data_ptr = analyzer;
 	struct vgm_error error;
-	enum vgm_error_code e = vgm_interpreter_run(&analyzer->interpreter, buf, s, &error);
-	return e;
+	return vgm_interpreter_run(&analyzer->interpreter, buf, s, &error);
 }
 
