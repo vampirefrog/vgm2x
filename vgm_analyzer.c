@@ -75,6 +75,9 @@ void vgm_analyzer_init(struct vgm_analyzer *a) {
 
 void vgm_analyzer_clear(struct vgm_analyzer *a) {
 	free(a->analyzers);
+	a->analyzers = 0;
+	a->num_chip_analyzers = 0;
+	memset(a->analyzers_by_id, 0, sizeof(a->analyzers_by_id));
 }
 
 int vgm_analyzer_run(struct vgm_analyzer *analyzer, uint8_t *buf, size_t s) {
