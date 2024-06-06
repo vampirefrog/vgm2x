@@ -47,6 +47,10 @@ static void opn_cmd_port8_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_
 	}
 }
 
+static void opn_cmd_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_t reg, uint8_t data, void *data_ptr) {
+	opn_cmd_port8_reg8_data8(chip_analyzer, 0, reg, data, data_ptr);
+}
+
 struct opn_analyzer *opn_analyzer_new(int clock, int num_channels) {
 	struct opn_analyzer *a = malloc(sizeof(*a));
 	if(!a) return 0;
@@ -57,6 +61,7 @@ struct opn_analyzer *opn_analyzer_new(int clock, int num_channels) {
 void opn_analyzer_init(struct opn_analyzer *analyzer, int clock, int num_channels) {
 	chip_analyzer_init(&analyzer->chip_analyzer, clock);
 	analyzer->chip_analyzer.cmd_port8_reg8_data8 = opn_cmd_port8_reg8_data8;
+	analyzer->chip_analyzer.cmd_reg8_data8 = opn_cmd_reg8_data8;
 
 	opn_voice_collector_init(&analyzer->collector);
 
