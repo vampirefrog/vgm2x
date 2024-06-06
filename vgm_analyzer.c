@@ -3,8 +3,9 @@
 #include <string.h>
 
 #include "vgm_analyzer.h"
-#include "opn_analyzer.h"
+#include "opl_analyzer.h"
 #include "opm_analyzer.h"
+#include "opn_analyzer.h"
 
 static int add_analyzer(struct chip_analyzer *a, int id, struct vgm_analyzer *analyzer) {
 	analyzer->num_chip_analyzers++;
@@ -23,24 +24,16 @@ static int init_chip_fn(enum vgm_chip_id chip_id, int clock, void *data_ptr) {
 	if(analyzer->analyzers_by_id[chip_id]) return -2;
 
 	switch(chip_id) {
-		case YM2612:
-		case YM2203:
-		case YM2608:
-		case YM2610:
-		case YM3812:
-		case YM3526:
-		case SECOND_YM2612:
-		case SECOND_YM2203:
-		case SECOND_YM2608:
-		case SECOND_YM2610:
-		case SECOND_YM3812:
-		case SECOND_YM3526:
+		case YM3526: case SECOND_YM3526: // OPL
+		case YM3812: case SECOND_YM3812: // OPL2
+			return add_analyzer((struct chip_analyzer *)opl_analyzer_new(clock, 9), chip_id, analyzer);
+		case YM2203: case SECOND_YM2203: // OPN
+		case YM2608: case SECOND_YM2608: // OPNA
+		case YM2610: case SECOND_YM2610: // OPNB
+		case YM2612: case SECOND_YM2612: // OPN2
 			return add_analyzer((struct chip_analyzer *)opn_analyzer_new(clock, chip_id == YM2203 || chip_id == SECOND_YM2203 ? 3 : 6), chip_id, analyzer);
-			break;
-		case YM2151:
-		case SECOND_YM2151:
+		case YM2151: case SECOND_YM2151: // OPM
 			return add_analyzer((struct chip_analyzer *)opm_analyzer_new(clock), chip_id, analyzer);
-			break;
 		default:
 			return -1;
 	}
