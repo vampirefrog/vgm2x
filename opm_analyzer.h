@@ -8,6 +8,7 @@ struct opm_analyzer {
 
 	int clock;
 	uint8_t regs[256];
+	uint8_t pmd;
 
 	struct opm_voice_collector collector;
 };

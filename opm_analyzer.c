@@ -7,17 +7,24 @@ static void opm_analyzer_push_voice(struct opm_analyzer *analyzer, uint8_t chan,
 	uint8_t *ofs = analyzer->regs + chan;
 
 	struct opm_voice_collector_voice voice;
-	voice.voice.rl_fb_con = ofs[0x20] & 0x3f;
+	voice.voice.lfrq = analyzer->regs[0x18];
+	voice.voice.amd = analyzer->regs[0x19] & 0x7f;
+	voice.voice.pmd = analyzer->pmd & 0x7f;
+	voice.voice.w = analyzer->regs[0x1b] & 0x03;
+	voice.voice.ne_nfrq = analyzer->regs[0x0f] & 0x9f;
+	voice.voice.rl_fb_con = ofs[0x20];
 	voice.voice.pms_ams = ofs[0x38] & 0x73;
 	voice.voice.slot = mask;
 	// voice.vgm_ofs = vgm_ofs;
 	for(int i = 0; i < 4; i++) {
-		voice.voice.operators[i].dt1_mul = ofs[0x40 + i * 8] & 0x7f;
-		voice.voice.operators[i].tl      = ofs[0x60 + i * 8] & 0x7f;
-		voice.voice.operators[i].ks_ar   = ofs[0x80 + i * 8] & 0xdf;
-		voice.voice.operators[i].ams_d1r = ofs[0xa0 + i * 8] & 0x9f;
-		voice.voice.operators[i].dt2_d2r = ofs[0xc0 + i * 8] & 0x9f;
-		voice.voice.operators[i].d1l_rr  = ofs[0xe0 + i * 8];
+		uint8_t *opofs = ofs + i * 8;
+		voice.voice.operators[i].dt1_mul = opofs[0x40] & 0x7f;
+		voice.voice.operators[i].tl      = opofs[0x60] & 0x7f;
+		voice.voice.operators[i].ks_ar   = opofs[0x80] & 0xdf;
+		voice.voice.operators[i].ams_d1r = opofs[0xa0] & 0x9f;
+		voice.voice.operators[i].dt2_d2r = opofs[0xc0] & 0x9f;
+		voice.voice.operators[i].d1l_rr  = opofs[0xe0];
+		voice.voice.operators[i].ws      = 0;
 	}
 
 	opm_voice_collector_push_voice(&analyzer->collector, &voice, chan);

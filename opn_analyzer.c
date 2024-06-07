@@ -7,9 +7,10 @@ static void opn_analyzer_push_voice(struct opn_analyzer *analyzer, uint8_t port,
 	uint8_t *ofs = &analyzer->regs[(chan & 0x03) | (chan & 0x04) << 6];
 
 	struct opn_voice_collector_voice voice;
+	voice.voice.lfo = analyzer->regs[0x22] & 0x0f;
+	voice.voice.slot = mask;
 	voice.voice.fb_con = ofs[0xb0];
 	voice.voice.lr_ams_pms = ofs[0xb4] & 0xf7;
-	voice.voice.slot = mask;
 	// voice.vgm_ofs = vgm_ofs;
 	for(int i = 0; i < 4; i++) {
 		voice.voice.operators[i].dt_mul   = ofs[0x30 + i * 4] & 0x7f;
