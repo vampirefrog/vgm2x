@@ -41,13 +41,18 @@ static void opn_cmd_port8_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_
 		uint8_t mask = data >> 4;
 		uint8_t chan = data & 0x07;
 
+		if(chan >= chip_analyzer->num_tracks) return;
+		// ignore DAC writes
+		if(chan == 6 && analyzer->ym_dac == 1)
+			return;
 		if(mask) {
-			// ignore DAC writes
-			if(chan == 6 && analyzer->ym_dac == 1)
-				return;
-			float pitch = opn_block_fnum_to_pitch(analyzer->regs[0xa0 + (chan < 3 ? 0 : 0x100) + chan], analyzer->regs[0xa4 + (chan < 3 ? 0 : 0x100) + chan], chip_analyzer->clock);
+			int block_regs_per_channel[] = { 0xa0, 0xa1, 0xa2, 0x1a0, 0x1a1, 0x1a2 };
+			float pitch = opn_block_fnum_to_pitch(analyzer->regs[block_regs_per_channel[chan] + 4], analyzer->regs[block_regs_per_channel[chan]], chip_analyzer->clock);
 			int midi_note = midi_pitch_to_note(pitch, 0);
 			opn_analyzer_push_voice(analyzer, port, chan, mask, midi_note);
+			chip_analyzer_note_on(chip_analyzer, chan, midi_note, 127);
+		} else {
+			chip_analyzer_note_off(chip_analyzer, chan);
 		}
 	}
 }
