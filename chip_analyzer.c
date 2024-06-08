@@ -51,6 +51,7 @@ void chip_analyzer_wait(struct chip_analyzer *analyzer, int wait_samples) {
 }
 
 void chip_analyzer_note_on(struct chip_analyzer *analyzer, int track, int note, int velocity) {
+	if(track >= analyzer->num_tracks) return;
 	midi_track_write_note_on(&analyzer->tracks[track].midi_track, analyzer->tracks[track].wait_samples, track, note, velocity);
 	analyzer->tracks[track].on_note = note;
 	analyzer->tracks[track].wait_samples = 0;
