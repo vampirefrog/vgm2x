@@ -52,7 +52,9 @@ static void write_port8_reg8_data8_fn(enum vgm_chip_id chip_id, uint8_t port, ui
 }
 
 static void wait_fn(int samples, void *data_ptr) {
-	// printf("wait %d\n", samples);
+	struct vgm_analyzer *analyzer = (struct vgm_analyzer *)data_ptr;
+	for(int i = 0; i < analyzer->num_chip_analyzers; i++)
+		chip_analyzer_wait(analyzer->analyzers[i], samples);
 }
 
 static void end_fn(void *data_ptr) {

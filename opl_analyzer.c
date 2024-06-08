@@ -47,20 +47,19 @@ static void opl_cmd_port8_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_
 	}
 }
 
-struct opl_analyzer *opl_analyzer_new(int clock, int num_channels) {
+struct opl_analyzer *opl_analyzer_new(int clock, int num_tracks) {
 	struct opl_analyzer *a = malloc(sizeof(*a));
 	if(!a) return 0;
-	opl_analyzer_init(a, clock, num_channels);
+	opl_analyzer_init(a, clock, num_tracks);
 	return a;
 }
 
-void opl_analyzer_init(struct opl_analyzer *analyzer, int clock, int num_channels) {
-	chip_analyzer_init(&analyzer->chip_analyzer, clock);
+void opl_analyzer_init(struct opl_analyzer *analyzer, int clock, int num_tracks) {
+	chip_analyzer_init(&analyzer->chip_analyzer, clock, num_tracks);
 	analyzer->chip_analyzer.cmd_port8_reg8_data8 = opl_cmd_port8_reg8_data8;
 
 	opl_voice_collector_init(&analyzer->collector);
 
 	memset(analyzer->regs, 0, sizeof(analyzer->regs));
 	analyzer->ym_dac = 0;
-	analyzer->num_channels = num_channels;
 }

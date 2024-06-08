@@ -12,8 +12,7 @@ struct opn_analyzer {
 	struct opn_voice_collector collector;
 
 	int ym_dac;
-	int num_channels;
 };
 
-struct opn_analyzer *opn_analyzer_new(int clock, int num_channels);
-void opn_analyzer_init(struct opn_analyzer *analyzer, int clock, int num_channels);
+struct opn_analyzer *opn_analyzer_new(int clock, int num_tracks);
+void opn_analyzer_init(struct opn_analyzer *analyzer, int clock, int num_tracks);

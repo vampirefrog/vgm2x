@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "opm_analyzer.h"
+#include "midi.h"
 
 static void opm_analyzer_push_voice(struct opm_analyzer *analyzer, uint8_t chan, uint8_t mask, uint8_t midi_note) {
 	uint8_t *ofs = analyzer->regs + chan;
@@ -37,10 +38,16 @@ static void opm_cmd_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_t reg,
 		uint8_t mask = (data & 0x78) >> 3;
 		uint8_t chan = data & 0x07;
 		if(mask) {
-			opm_analyzer_push_voice(analyzer, chan, mask);
+			float pitch = opm_kc_kf_to_pitch(analyzer->regs[0x28 + chan], analyzer->regs[0x30 + chan], chip_analyzer->clock);
+			int midi_note = midi_pitch_to_note(pitch, 0);
+			opm_analyzer_push_voice(analyzer, chan, mask, midi_note);
+			chip_analyzer_note_on(chip_analyzer, chan, midi_note, 127);
+		} else {
+			chip_analyzer_note_off(chip_analyzer, chan);
 		}
 	} else {
-		analyzer->regs[reg] = data;
+		if(reg == 0x19 && data >= 128) analyzer->pmd = data & 0x7f;
+		else analyzer->regs[reg] = data;
 	}
 }
 
@@ -52,7 +59,7 @@ struct opm_analyzer * opm_analyzer_new(int clock) {
 }
 
 void opm_analyzer_init(struct opm_analyzer *analyzer, int clock) {
-	chip_analyzer_init(&analyzer->chip_analyzer, clock);
+	chip_analyzer_init(&analyzer->chip_analyzer, clock, 8);
 	analyzer->chip_analyzer.cmd_reg8_data8 = opm_cmd_reg8_data8;
 
 	opm_voice_collector_init(&analyzer->collector);

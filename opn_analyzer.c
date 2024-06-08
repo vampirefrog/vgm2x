@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include "midi.h"
 
 #include "opn_analyzer.h"
 
@@ -55,15 +56,15 @@ static void opn_cmd_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_t reg,
 	opn_cmd_port8_reg8_data8(chip_analyzer, 0, reg, data, data_ptr);
 }
 
-struct opn_analyzer *opn_analyzer_new(int clock, int num_channels) {
+struct opn_analyzer *opn_analyzer_new(int clock, int num_tracks) {
 	struct opn_analyzer *a = malloc(sizeof(*a));
 	if(!a) return 0;
-	opn_analyzer_init(a, clock, num_channels);
+	opn_analyzer_init(a, clock, num_tracks);
 	return a;
 }
 
-void opn_analyzer_init(struct opn_analyzer *analyzer, int clock, int num_channels) {
-	chip_analyzer_init(&analyzer->chip_analyzer, clock);
+void opn_analyzer_init(struct opn_analyzer *analyzer, int clock, int num_tracks) {
+	chip_analyzer_init(&analyzer->chip_analyzer, clock, num_tracks);
 	analyzer->chip_analyzer.cmd_port8_reg8_data8 = opn_cmd_port8_reg8_data8;
 	analyzer->chip_analyzer.cmd_reg8_data8 = opn_cmd_reg8_data8;
 
@@ -71,5 +72,4 @@ void opn_analyzer_init(struct opn_analyzer *analyzer, int clock, int num_channel
 
 	memset(analyzer->regs, 0, sizeof(analyzer->regs));
 	analyzer->ym_dac = 0;
-	analyzer->num_channels = num_channels;
 }
