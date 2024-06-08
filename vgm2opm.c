@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 			for(int i = 0; i < a->collector.num_voices; i++) {
 				struct opm_voice_collector_voice opmv;
 				memcpy(&opmv, a->collector.voices + i, sizeof(opmv));
-				opm_voice_collector_push_voice(&collector, &opmv, 0);
+				opm_voice_collector_push_voice(&collector, &opmv, -1, -1);
 			}
 		} else {
 			struct opn_analyzer *a = (struct opn_analyzer *)va.analyzers_by_id[ids[i]];
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
 				opmv.chan_used_mask = opnv->chan_used_mask;
 				memcpy(opmv.note_usage, opnv->note_usage, sizeof(opnv->note_usage));
 				opm_voice_load_opn_voice(&opmv.voice, &opnv->voice);
-				opm_voice_collector_push_voice(&collector, &opmv, 0);
+				opm_voice_collector_push_voice(&collector, &opmv, -1, -1);
 			}
 		}
 	}

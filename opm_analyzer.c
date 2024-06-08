@@ -3,10 +3,11 @@
 
 #include "opm_analyzer.h"
 
-static void opm_analyzer_push_voice(struct opm_analyzer *analyzer, uint8_t chan, uint8_t mask) {
+static void opm_analyzer_push_voice(struct opm_analyzer *analyzer, uint8_t chan, uint8_t mask, uint8_t midi_note) {
 	uint8_t *ofs = analyzer->regs + chan;
 
 	struct opm_voice_collector_voice voice;
+	memset(&voice, 0, sizeof(voice));
 	voice.voice.lfrq = analyzer->regs[0x18];
 	voice.voice.amd = analyzer->regs[0x19] & 0x7f;
 	voice.voice.pmd = analyzer->pmd & 0x7f;
@@ -27,7 +28,7 @@ static void opm_analyzer_push_voice(struct opm_analyzer *analyzer, uint8_t chan,
 		voice.voice.operators[i].ws      = 0;
 	}
 
-	opm_voice_collector_push_voice(&analyzer->collector, &voice, chan);
+	opm_voice_collector_push_voice(&analyzer->collector, &voice, chan, midi_note);
 }
 
 static void opm_cmd_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_t reg, uint8_t data, void *data_ptr) {

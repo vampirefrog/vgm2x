@@ -3,10 +3,11 @@
 
 #include "opn_analyzer.h"
 
-static void opn_analyzer_push_voice(struct opn_analyzer *analyzer, uint8_t port, uint8_t chan, uint8_t mask) {
+static void opn_analyzer_push_voice(struct opn_analyzer *analyzer, uint8_t port, uint8_t chan, uint8_t mask, int midi_note) {
 	uint8_t *ofs = &analyzer->regs[(chan & 0x03) | (chan & 0x04) << 6];
 
 	struct opn_voice_collector_voice voice;
+	memset(&voice, 0, sizeof(voice));
 	voice.voice.lfo = analyzer->regs[0x22] & 0x0f;
 	voice.voice.slot = mask;
 	voice.voice.fb_con = ofs[0xb0];
@@ -22,7 +23,7 @@ static void opn_analyzer_push_voice(struct opn_analyzer *analyzer, uint8_t port,
 		voice.voice.operators[i].ssg_eg   = ofs[0x90 + i * 4] & 0x0f;
 	}
 
-	opn_voice_collector_push_voice(&analyzer->collector, &voice, chan + port * 3);
+	opn_voice_collector_push_voice(&analyzer->collector, &voice, chan + port * 3, midi_note);
 }
 
 static void opn_cmd_port8_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_t port, uint8_t reg, uint8_t data, void *data_ptr) {
@@ -43,7 +44,9 @@ static void opn_cmd_port8_reg8_data8(struct chip_analyzer *chip_analyzer, uint8_
 			// ignore DAC writes
 			if(chan == 6 && analyzer->ym_dac == 1)
 				return;
-			opn_analyzer_push_voice(analyzer, port, chan, mask);
+			float pitch = opn_block_fnum_to_pitch(analyzer->regs[0xa0 + (chan < 3 ? 0 : 0x100) + chan], analyzer->regs[0xa4 + (chan < 3 ? 0 : 0x100) + chan], chip_analyzer->clock);
+			int midi_note = midi_pitch_to_note(pitch, 0);
+			opn_analyzer_push_voice(analyzer, port, chan, mask, midi_note);
 		}
 	}
 }

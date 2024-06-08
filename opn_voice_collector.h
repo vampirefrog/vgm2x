@@ -16,5 +16,5 @@ struct opn_voice_collector {
 };
 
 void opn_voice_collector_init(struct opn_voice_collector *c);
-void opn_voice_collector_push_voice(struct opn_voice_collector *c, struct opn_voice_collector_voice *v, int chan);
+void opn_voice_collector_push_voice(struct opn_voice_collector *c, struct opn_voice_collector_voice *v, int chan, int midi_note);
 void opn_voice_collector_dump_voices(struct opn_voice_collector *c);

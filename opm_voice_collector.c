@@ -8,7 +8,7 @@ void opm_voice_collector_init(struct opm_voice_collector *collector) {
 	memset(collector, 0, sizeof(*collector));
 }
 
-void opm_voice_collector_push_voice(struct opm_voice_collector *collector, struct opm_voice_collector_voice *voice, int chan) {
+void opm_voice_collector_push_voice(struct opm_voice_collector *collector, struct opm_voice_collector_voice *voice, int chan, int midi_note) {
 	opm_voice_normalize(&voice->voice);
 
 	int existing_voice = -1;
