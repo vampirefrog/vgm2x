@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 			continue;
 		}
 		DataLoader_ReadAll(dload);
-		uint8_t *buf = DataLoader_GetData(dload);
+		DataLoader_GetData(dload);
 		int r = vgm_analyzer_run(&va, DataLoader_GetData(dload), DataLoader_GetSize(dload));
 		if(r) fprintf(stderr, "Could not analyze %s: error %d\n", argv[i], r);
 		DataLoader_Deinit(dload);
