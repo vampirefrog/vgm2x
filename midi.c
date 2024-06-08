@@ -175,6 +175,8 @@ float midi_note_freq(int note, float cents) {
 int midi_pitch_to_note(float pitch_hz, float *cents) {
 	float f = 12 * log(pitch_hz / 220.0) / log(2.0);
 	int note = round(f);
+	if(note > 70) note = 70;
+	if(note < -57) note = -57;
 	if(cents) *cents = (f - note) * 100;
 	return (int)note + 57;
 }
