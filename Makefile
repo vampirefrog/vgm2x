@@ -25,16 +25,3 @@ clean:
 	rm -f *.o vgm/*.o *.d vgm/*.d vgm/*.a vgm2x *.a
 	cd libfmvoice && make clean
 	cd midilib && make clean
-
-extract: vgm2opm
-	$(if $(VGMDIR),,$(error Please set VGMDIR for extraction))
-	$(if $(shell which unzip),,$(error "No unzip in $(PATH), consider doing apt-get install unzip"))
-	mkdir -p /tmp/vgmzip
-	rm -f /tmp/vgmzip/*
-	find "$$VGMDIR" -name '*.zip' | while read zipname; do \
-		echo "$$zipname"; \
-		unzip -q -o -d /tmp/vgmzip "$$zipname"; \
-		./vgm2opm -o `dirname "$$zipname"`/`basename "$$zipname" .zip`.opm /tmp/vgmzip/*.vg[mz]; \
-		rm -f /tmp/vgmzip/*; \
-	done
-	rmdir /tmp/vgmzip
