@@ -2,6 +2,14 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <libgen.h>
+#include <dirent.h>
+#ifdef HAVE_LIBARCHIVE
+#include <archive.h>
+#include <archive_entry.h>
+#else
+#include <zip.h>
+#endif
 
 #include "cmdline.h"
 #include "tools.h"
@@ -10,6 +18,165 @@
 #include "opm_analyzer.h"
 #include "opn_analyzer.h"
 #include "libvgm/utils/FileLoader.h"
+#include "libvgm/utils/MemoryLoader.h"
+
+#include <sys/stat.h>
+int each_file(const char *path, int (*process_file)(const char *, void *), void *data_ptr) {
+	struct stat st;
+	int r = stat(path, &st);
+	if(r < 0) {
+		fprintf(stderr, "Could not stat %s: %s (%d)\n", path, strerror(errno), errno);
+		return errno;
+	}
+	if(S_ISDIR(st.st_mode)) {
+		DIR *d = opendir(path);
+		if(!d) {
+			fprintf(stderr, "Could not opendir %s: %s (%d)\n", path, strerror(errno), errno);
+			return errno;
+		}
+		struct dirent *de;
+		while((de = readdir(d))) {
+			if(de->d_type != DT_REG && de->d_type != DT_DIR) continue;
+			if(de->d_name[0] == '.' && de->d_name[1] == 0) continue;
+			if(de->d_name[0] == '.' && de->d_name[1] == '.' && de->d_name[2] == 0) continue;
+			char rpath[PATH_MAX]; // FIXME: maybe allocate new string instead?
+			snprintf(rpath, sizeof(rpath), "%s/%s", path, de->d_name);
+			each_file(rpath, process_file, data_ptr);
+		}
+		if(closedir(d)) {
+			fprintf(stderr, "Could not closedir %s: %s (%d)\n", path, strerror(errno), errno);
+			return errno;
+		}
+	} else if(S_ISREG(st.st_mode)) {
+		int r = process_file(path, data_ptr);
+		if(r) return r;
+	}
+	return 0;
+}
+
+static int vgm_file_cb(DATA_LOADER *loader, char *filename_base, char *target_dir, void *data_ptr) {
+	printf("vgm_file_cb %s/%s.opm\n", filename_base, target_dir);
+	DataLoader_ReadAll(loader);
+	return vgm_analyzer_run(data_ptr, DataLoader_GetData(loader), DataLoader_GetSize(loader));
+}
+
+struct vgm_file_cb_pair {
+	int (*process_file)(DATA_LOADER *, char *, char *, void *);
+	void *data_ptr;
+};
+
+static int each_vgm_file_cb(const char *filename, void *data_ptr) {
+	struct vgm_file_cb_pair *pair = (struct vgm_file_cb_pair *)data_ptr;
+	int l = strlen(filename);
+	const char *ext = filename + l - 4;
+	if(!strcasecmp(ext, ".zip")) {
+#ifdef HAVE_LIBARCHIVE
+		struct archive *a;
+		a = archive_read_new();
+		archive_read_support_filter_all(a);
+		archive_read_support_format_all(a);
+		int r = archive_read_open_filename(a, filename, 10240);
+		if(r != ARCHIVE_OK) return r;
+		struct archive_entry *entry;
+		while(archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+			printf("%s\n",archive_entry_pathname(entry));
+			archive_read_data_skip(a);
+		}
+		r = archive_read_free(a);
+		if(r != ARCHIVE_OK) return r;
+#else
+		int err;
+		zip_t *z = zip_open(filename, ZIP_RDONLY, &err);
+		if(!z) {
+			fprintf(stderr, "Could not open zip file %s: %d\n", filename, err);
+			return err;
+		}
+		int num_entries = zip_get_num_entries(z, 0);
+		if(num_entries < 0) {
+			fprintf(stderr, "Could not get number of entries\n");
+			zip_close(z);
+			return -1;
+		}
+		for(int j = 0; j < num_entries; j++) {
+			zip_stat_t st;
+			zip_stat_index(z, j, ZIP_STAT_NAME | ZIP_STAT_SIZE, &st);
+			int vl = strlen(st.name);
+			if(vl > 4 && (!strcasecmp(st.name + vl - 4, ".vgm") || (!strcasecmp(st.name + vl - 4, ".vgz")))) {
+				uint8_t *buf = malloc(st.size);
+				if(!buf) {
+					fprintf(stderr, "Could not allocate %lu bytes\n", st.size);
+					return -1;
+				}
+				zip_file_t *f = zip_fopen_index(z, j, 0);
+				if(!f) {
+					fprintf(stderr, "Could not open %s (%d)\n", st.name, j);
+					return -1;
+				}
+				int nr = zip_fread(f, buf, st.size);
+				if(nr != st.size) {
+					fprintf(stderr, "Could not read %lu bytes from zip\n", st.size);
+					return -1;
+				}
+				zip_fclose(f);
+
+				DATA_LOADER *dload = MemoryLoader_Init(buf, st.size);
+				if(!dload) {
+					fprintf(stderr, "Could not init loader for %s\n", filename);
+					return -1;
+				}
+				if(DataLoader_Load(dload)) {
+					fprintf(stderr, "Could not load %s\n", filename);
+					DataLoader_Deinit(dload);
+					return -1;
+				}
+				char writable_path[PATH_MAX];
+				char base[PATH_MAX];
+				strncpy(writable_path, filename, sizeof(writable_path));
+				if(writable_path[l-4] == '.')
+					writable_path[l-4] = 0;
+				strncpy(base, st.name, sizeof(base));
+				char *b = basename(base);
+				char *dot = strrchr(b, '.');
+				if(dot) *dot = 0;
+				int r = pair->process_file(dload, basename(writable_path), b, pair->data_ptr);
+				DataLoader_Deinit(dload);
+				if(r) return r;
+			}
+		}
+		zip_close(z);
+#endif
+	} else if(!strcasecmp(ext, ".vgm") || !strcasecmp(ext, ".vgz")) {
+		DATA_LOADER *dload = FileLoader_Init(filename);
+		if(!dload) {
+			fprintf(stderr, "Could not init loader for %s\n", filename);
+			return -1;
+		}
+		if(DataLoader_Load(dload)) {
+			fprintf(stderr, "Could not load %s\n", filename);
+			DataLoader_Deinit(dload);
+			return -2;
+		}
+		char *basepath = strdup(filename);
+		char base[PATH_MAX];
+		strncpy(base, filename, sizeof(base));
+		char *b = basename(base);
+		char *dot = strrchr(b, '.');
+		if(dot) *dot = 0;
+		int r = pair->process_file(dload, basename(basepath), b, pair->data_ptr);
+		free(basepath);
+		DataLoader_Deinit(dload);
+		if(r) return r;
+	}
+	return 0;
+}
+
+int each_vgm_file(const char *path, int (*process_file)(DATA_LOADER *, char *, char *, void *), void *data_ptr) {
+	struct vgm_file_cb_pair pair = {
+		.process_file = process_file,
+		.data_ptr = data_ptr,
+	};
+	return each_file(path, each_vgm_file_cb, &pair);
+}
 
 size_t write_fn(void *buf, size_t bufsize, void *data_ptr) {
 	return fwrite(buf, 1, bufsize, (FILE *)data_ptr);
@@ -43,21 +210,8 @@ int main(int argc, char **argv) {
 	vgm_analyzer_init(&va);
 
 	for(int i = optind; i < argc; i++) {
-		DATA_LOADER *dload = FileLoader_Init(argv[i]);
-		if(!dload) {
-			fprintf(stderr, "Could not init loader for %s\n", argv[i]);
-			continue;
-		}
-		if(DataLoader_Load(dload)) {
-			fprintf(stderr, "Could not load %s\n", argv[i]);
-			DataLoader_Deinit(dload);
-			continue;
-		}
-		DataLoader_ReadAll(dload);
-		DataLoader_GetData(dload);
-		int r = vgm_analyzer_run(&va, DataLoader_GetData(dload), DataLoader_GetSize(dload));
-		if(r) fprintf(stderr, "Could not analyze %s: error %d\n", argv[i], r);
-		DataLoader_Deinit(dload);
+		int r = each_vgm_file(argv[i], vgm_file_cb, &va);
+		if(r) fprintf(stderr, "Could not proces %s: %d\n", argv[i], r);
 	}
 
 	struct opm_voice_collector collector;

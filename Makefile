@@ -1,13 +1,13 @@
 CC=gcc
-CFLAGS=-Wall -ggdb
-LDFLAGS=-lz -lm
+CFLAGS=-Wall -ggdb $(shell pkg-config --cflags libarchive libzip)
+LDFLAGS=-lz -lm $(shell pkg-config --libs libarchive libzip)
 VGMDIR=
 
 .PHONY: all extract
 
 all: vgm2opm
 
-vgm2opm: vgm2opm.o cmdline.o tools.o libvgm2x.a vgm/libvgminterpreter.a libfmvoice/libfmvoice.a libvgm/utils/DataLoader.o libvgm/utils/FileLoader.o
+vgm2opm: vgm2opm.o cmdline.o tools.o libvgm2x.a vgm/libvgminterpreter.a libfmvoice/libfmvoice.a libvgm/utils/DataLoader.o libvgm/utils/FileLoader.o libvgm/utils/MemoryLoader.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 vgm/libvgminterpreter.a: vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o
 	ar cr $@ $^
