@@ -5,9 +5,9 @@ VGMDIR=
 
 .PHONY: all extract
 
-all: vgm2opm
+all: vgm2x
 
-vgm2opm: vgm2opm.o cmdline.o tools.o libvgm2x.a vgm/libvgminterpreter.a midilib/libmidi.a libfmvoice/libfmvoice.a libvgm/utils/DataLoader.o libvgm/utils/FileLoader.o libvgm/utils/MemoryLoader.o
+vgm2x: vgm2x.o cmdline.o tools.o libvgm2x.a vgm/libvgminterpreter.a midilib/libmidi.a libfmvoice/libfmvoice.a libvgm/utils/DataLoader.o libvgm/utils/FileLoader.o libvgm/utils/MemoryLoader.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 vgm/libvgminterpreter.a: vgm/commands.o vgm/error.o vgm/header.o vgm/interpreter.o
 	ar cr $@ $^
@@ -22,7 +22,7 @@ libfmvoice/libfmvoice.a:
 	$(CC) -MMD -c $< -o $@ $(CFLAGS)
 
 clean:
-	rm -f *.o vgm/*.o *.d vgm/*.d vgm/*.a vgm2opm *.a
+	rm -f *.o vgm/*.o *.d vgm/*.d vgm/*.a vgm2x *.a
 	cd libfmvoice && make clean
 	cd midilib && make clean
 
