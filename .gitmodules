@@ -4,3 +4,6 @@
 [submodule "libvgm"]
 	path = libvgm
 	url = https://github.com/ValleyBell/libvgm.git
+[submodule "midilib"]
+	path = midilib
+	url = https://github.com/vampirefrog/midilib.git

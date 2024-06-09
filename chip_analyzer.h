@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "midi_track.h"
+#include "midilib/midi_track.h"
 
 struct chip_analyzer_track {
 	struct midi_track midi_track;

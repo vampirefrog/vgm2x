@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
-#include "midi.h"
+#include "midilib/midi.h"
 
 #include "opn_analyzer.h"
 

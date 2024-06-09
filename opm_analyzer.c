@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "opm_analyzer.h"
-#include "midi.h"
+#include "midilib/midi.h"
 
 static void opm_analyzer_push_voice(struct opm_analyzer *analyzer, uint8_t chan, uint8_t mask, uint8_t midi_note) {
 	uint8_t *ofs = analyzer->regs + chan;
