@@ -8,7 +8,7 @@ void opl_voice_collector_init(struct opl_voice_collector *collector) {
 	memset(collector, 0, sizeof(*collector));
 }
 
-void opl_voice_collector_push_voice(struct opl_voice_collector *collector, struct opl_voice_collector_voice *voice, int chan) {
+void opl_voice_collector_push_voice(struct opl_voice_collector *collector, struct opl_voice_collector_voice *voice, int chan, int midi_note) {
 	opl_voice_normalize(&voice->voice);
 
 	int existing_voice = -1;
@@ -22,7 +22,8 @@ void opl_voice_collector_push_voice(struct opl_voice_collector *collector, struc
 
 	if(existing_voice >= 0) {
 		struct opl_voice_collector_voice *v = &collector->voices[existing_voice];
-		v->chan_used_mask |= 1 << chan;
+		if(chan >= 0) v->chan_used_mask |= 1 << chan;
+		if(midi_note >= 0) v->note_usage[midi_note & 0x7f]++;
 		return;
 	}
 
@@ -33,6 +34,8 @@ void opl_voice_collector_push_voice(struct opl_voice_collector *collector, struc
 		return;
 	}
 	voice->chan_used_mask |= 1 << chan;
+	if(chan >= 0) voice->chan_used_mask |= 1 << chan;
+	if(midi_note >= 0) voice->note_usage[midi_note & 0x7f]++;
 	memcpy(&collector->voices[collector->num_voices - 1], voice, sizeof(*voice));
 }
 
