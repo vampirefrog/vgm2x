@@ -188,7 +188,7 @@ static int vgm_file_cb(DATA_LOADER *loader, char *target_dir, char *filename_bas
 	snprintf(midifilename, sizeof(midifilename), "%s/%s.mid", target_dir, filename_base);
 	FILE *f = fopen(midifilename, "wb");
 	if(!f) {
-		fprintf(stderr, "Could not open poo.mid: %s (%d)\n", strerror(errno), errno);
+		fprintf(stderr, "Could not open %s: %s (%d)\n", midifilename, strerror(errno), errno);
 		return -2;
 	}
 	midi_file_write(&m, write_fn, f);
@@ -344,7 +344,7 @@ static int each_vgm_file_cb(const char *filename, void *data_ptr) {
 		char *b = basename(base);
 		char *dot = strrchr(b, '.');
 		if(dot) *dot = 0;
-		int r = pair->process_file(dload, basename(basepath), b, pair->data_ptr);
+		int r = pair->process_file(dload, dirname(basepath), b, pair->data_ptr);
 		free(basepath);
 		DataLoader_Deinit(dload);
 		if(r) return r;
