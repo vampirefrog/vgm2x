@@ -53,4 +53,4 @@ dkms.conf
 *.opm
 vgm/files/*
 
-vgm2opm
+vgm2x
