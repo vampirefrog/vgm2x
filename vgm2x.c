@@ -64,7 +64,7 @@ int each_file(const char *path, int (*process_file)(const char *, void *), void 
 	return 0;
 }
 
-size_t write_fn(void *buf, size_t bufsize, void *data_ptr) {
+int write_fn(void *buf, size_t bufsize, void *data_ptr) {
 	return fwrite(buf, 1, bufsize, (FILE *)data_ptr);
 }
 
@@ -171,18 +171,11 @@ static int vgm_file_cb(DATA_LOADER *loader, char *target_dir, char *filename_bas
 		}
 	}
 
-	int total_tracks = 0;
-	for(int i = 0; i < va.num_chip_analyzers; i++)
-		total_tracks += va.analyzers[i]->num_tracks;
 	struct midi_file m;
-	midi_file_init(&m, MIDI_FORMAT_MULTI_TRACKS, total_tracks, 44100*120/60);
-	int cur_track = 0;
-	for(int i = 0; i < va.num_chip_analyzers; i++) {
-		for(int j = 0; j < va.analyzers[i]->num_tracks; j++) {
-			memcpy(m.tracks + cur_track, &va.analyzers[i]->tracks[j].midi_track, sizeof(m.tracks[0]));
-			cur_track++;
-		}
-	}
+	midi_file_init(&m, MIDI_FORMAT_MULTI_TRACKS, 0, 44100*120/60);
+	for(int i = 0; i < va.num_chip_analyzers; i++)
+		for(int j = 0; j < va.analyzers[i]->num_tracks; j++)
+			midi_file_append_track(&m, &va.analyzers[i]->tracks[j].midi_track);
 
 	char midifilename[512];
 	snprintf(midifilename, sizeof(midifilename), "%s/%s.mid", target_dir, filename_base);
