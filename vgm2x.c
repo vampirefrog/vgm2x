@@ -148,17 +148,17 @@ static int vgm_file_cb(DATA_LOADER *loader, char *target_dir, char *filename_bas
 		struct fm_voice_bank_position pos;
 		fm_voice_bank_position_init(&pos);
 		for(int j = 0; ;j = pos.opl + pos.opm + pos.opn) {
-			if(loaders[i]->max_opl_voices == 1 && loaders[i]->max_opm_voices == 0 && loaders[i]->max_opn_voices == 0) {
+			if(loaders[i]->max_opl_voices == 1 && loaders[i]->max_opm_voices == 0 && loaders[i]->max_opn_voices == 0 && bank.num_opl_voices > pos.opl) {
 				if(bank.opl_voices[pos.opl].name[0])
 					snprintf(fmfile, sizeof(fmfile), "%s/%s-%s.%s", target_dir, filename_base, bank.opl_voices[pos.opl].name, loaders[i]->file_ext);
 				else
 					snprintf(fmfile, sizeof(fmfile), "%s/%s-%d.%s", target_dir, filename_base, pos.opl, loaders[i]->file_ext);
-			} else if(loaders[i]->max_opl_voices == 0 && loaders[i]->max_opm_voices == 1 && loaders[i]->max_opn_voices == 0) {
+			} else if(loaders[i]->max_opl_voices == 0 && loaders[i]->max_opm_voices == 1 && loaders[i]->max_opn_voices == 0 && bank.num_opm_voices > pos.opm) {
 				if(bank.opm_voices[pos.opm].name[0])
 					snprintf(fmfile, sizeof(fmfile), "%s/%s-%s.%s", target_dir, filename_base, bank.opm_voices[pos.opm].name, loaders[i]->file_ext);
 				else
 					snprintf(fmfile, sizeof(fmfile), "%s/%s-%d.%s", target_dir, filename_base, pos.opm, loaders[i]->file_ext);
-			} else if(loaders[i]->max_opl_voices == 0 && loaders[i]->max_opm_voices == 0 && loaders[i]->max_opn_voices == 1) {
+			} else if(loaders[i]->max_opl_voices == 0 && loaders[i]->max_opm_voices == 0 && loaders[i]->max_opn_voices == 1 && bank.num_opn_voices > pos.opn) {
 				if(bank.opn_voices[pos.opn].name[0])
 					snprintf(fmfile, sizeof(fmfile), "%s/%s-%s.%s", target_dir, filename_base, bank.opn_voices[pos.opn].name, loaders[i]->file_ext);
 				else
@@ -173,6 +173,10 @@ static int vgm_file_cb(DATA_LOADER *loader, char *target_dir, char *filename_bas
 				snprintf(fmfile, sizeof(fmfile), "%s/%s-%d-%d.%s", target_dir, filename_base, j + 1, next + 1, loaders[i]->file_ext);
 			}
 			FILE *o = fopen(fmfile, "w");
+			if(!o) {
+				fprintf(stderr, "Could not open %s: %s (%d)\n", fmfile, strerror(errno), errno);
+				continue;
+			}
 			struct fm_voice_bank_position prevpos;
 			fm_voice_bank_position_copy(&prevpos, &pos);
 			loader_save(loaders[i], &bank, &pos, write_fn, o);
