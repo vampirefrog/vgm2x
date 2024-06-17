@@ -12,6 +12,11 @@
 #include <zip.h>
 #endif
 
+#include "libfmvoice/fm_voice_bank.h"
+#include "libfmvoice/loader.h"
+#include "libvgm/utils/FileLoader.h"
+#include "libvgm/utils/MemoryLoader.h"
+#include "midilib/midi_file.h"
 #include "cmdline.h"
 #include "tools.h"
 #include "vgm_analyzer.h"
@@ -21,14 +26,11 @@
 #include "opl_analyzer.h"
 #include "opm_analyzer.h"
 #include "opn_analyzer.h"
-#include "libvgm/utils/FileLoader.h"
-#include "libvgm/utils/MemoryLoader.h"
-#include "midilib/midi_file.h"
 
 char *opt_output = "-";
-enum fm_voice_file_format opt_opl_format;
-enum fm_voice_file_format opt_opm_format;
-enum fm_voice_file_format opt_opn_format;
+char *opt_opl_format_str = "BNK";
+char *opt_opm_format_str = "OPM";
+char *opt_opn_format_str = "INS";
 int opt_csv = 0;
 
 int each_file(const char *path, int (*process_file)(const char *, void *), void *data_ptr) {
@@ -130,44 +132,56 @@ static int vgm_file_cb(DATA_LOADER *loader, char *target_dir, char *filename_bas
 	struct fm_voice_bank bank;
 	fm_voice_bank_init(&bank);
 	for(int i = 0; i < opl_collector.num_voices; i++)
-		fm_voice_bank_append_opl_voice(&bank, &opl_collector.voices[i].voice);
+		fm_voice_bank_append_opl_voices(&bank, &opl_collector.voices[i].voice, 1);
 	for(int i = 0; i < opm_collector.num_voices; i++)
-		fm_voice_bank_append_opm_voice(&bank, &opm_collector.voices[i].voice);
+		fm_voice_bank_append_opm_voices(&bank, &opm_collector.voices[i].voice, 1);
 	for(int i = 0; i < opn_collector.num_voices; i++)
-		fm_voice_bank_append_opn_voice(&bank, &opn_collector.voices[i].voice);
+		fm_voice_bank_append_opn_voices(&bank, &opn_collector.voices[i].voice, 1);
 
 	char fmfile[PATH_MAX];
-	if(bank.num_opl_voices > 0) {
-		snprintf(fmfile, sizeof(fmfile), "%s/%s.%s", target_dir, filename_base, fm_get_voice_file_format_extension(opt_opl_format));
-		FILE *o = fopen(fmfile, "w");
-		if(!o) {
-			fprintf(stderr, "Could not open %s: %s (%d)\n", fmfile, strerror(errno), errno);
-			return -1;
-		} else {
-			fm_voice_bank_save(&bank, opt_opl_format, write_fn, o);
+	struct loader *loaders[3] = {
+		get_loader_by_name(opt_opl_format_str),
+		get_loader_by_name(opt_opm_format_str),
+		get_loader_by_name(opt_opn_format_str),
+	};
+	for(int i = 0; i < sizeof(loaders) / sizeof(loaders[0]); i++) {
+		struct fm_voice_bank_position pos;
+		fm_voice_bank_position_init(&pos);
+		for(int j = 0; ;j = pos.opl + pos.opm + pos.opn) {
+			if(loaders[i]->max_opl_voices == 1 && loaders[i]->max_opm_voices == 0 && loaders[i]->max_opn_voices == 0) {
+				if(bank.opl_voices[pos.opl].name[0])
+					snprintf(fmfile, sizeof(fmfile), "%s/%s-%s.%s", target_dir, filename_base, bank.opl_voices[pos.opl].name, loaders[i]->file_ext);
+				else
+					snprintf(fmfile, sizeof(fmfile), "%s/%s-%d.%s", target_dir, filename_base, pos.opl, loaders[i]->file_ext);
+			} else if(loaders[i]->max_opl_voices == 0 && loaders[i]->max_opm_voices == 1 && loaders[i]->max_opn_voices == 0) {
+				if(bank.opm_voices[pos.opm].name[0])
+					snprintf(fmfile, sizeof(fmfile), "%s/%s-%s.%s", target_dir, filename_base, bank.opm_voices[pos.opm].name, loaders[i]->file_ext);
+				else
+					snprintf(fmfile, sizeof(fmfile), "%s/%s-%d.%s", target_dir, filename_base, pos.opm, loaders[i]->file_ext);
+			} else if(loaders[i]->max_opl_voices == 0 && loaders[i]->max_opm_voices == 0 && loaders[i]->max_opn_voices == 1) {
+				if(bank.opn_voices[pos.opn].name[0])
+					snprintf(fmfile, sizeof(fmfile), "%s/%s-%s.%s", target_dir, filename_base, bank.opn_voices[pos.opn].name, loaders[i]->file_ext);
+				else
+					snprintf(fmfile, sizeof(fmfile), "%s/%s-%d.%s", target_dir, filename_base, pos.opn, loaders[i]->file_ext);
+			} else if(loaders[i]->max_opl_voices == 0 && loaders[i]->max_opm_voices == 0 && loaders[i]->max_opn_voices == 0) {
+				snprintf(fmfile, sizeof(fmfile), "%s/%s.%s", target_dir, filename_base, loaders[i]->file_ext);
+			} else {
+				int next = j;
+				if(loaders[i]->max_opl_voices == 0) next += bank.num_opl_voices - pos.opl; else next += loaders[i]->max_opl_voices;
+				if(loaders[i]->max_opm_voices == 0) next += bank.num_opm_voices - pos.opm; else next += loaders[i]->max_opm_voices;
+				if(loaders[i]->max_opn_voices == 0) next += bank.num_opn_voices - pos.opn; else next += loaders[i]->max_opn_voices;
+				snprintf(fmfile, sizeof(fmfile), "%s/%s-%d-%d.%s", target_dir, filename_base, j + 1, next + 1, loaders[i]->file_ext);
+			}
+			FILE *o = fopen(fmfile, "w");
+			struct fm_voice_bank_position prevpos;
+			fm_voice_bank_position_copy(&prevpos, &pos);
+			loader_save(loaders[i], &bank, &pos, write_fn, o);
 			fclose(o);
-		}
-	}
-	if(bank.num_opm_voices > 0) {
-		snprintf(fmfile, sizeof(fmfile), "%s/%s.%s", target_dir, filename_base, fm_get_voice_file_format_extension(opt_opm_format));
-		FILE *o = fopen(fmfile, "w");
-		if(!o) {
-			fprintf(stderr, "Could not open %s: %s (%d)\n", fmfile, strerror(errno), errno);
-			return -1;
-		} else {
-			fm_voice_bank_save(&bank, opt_opm_format, write_fn, o);
-			fclose(o);
-		}
-	}
-	if(bank.num_opn_voices > 0) {
-		snprintf(fmfile, sizeof(fmfile), "%s/%s.%s", target_dir, filename_base, fm_get_voice_file_format_extension(opt_opn_format));
-		FILE *o = fopen(fmfile, "w");
-		if(!o) {
-			fprintf(stderr, "Could not open %s: %s (%d)\n", fmfile, strerror(errno), errno);
-			return -1;
-		} else {
-			fm_voice_bank_save(&bank, opt_opn_format, write_fn, o);
-			fclose(o);
+			if(
+				(loaders[i]->max_opl_voices == 0 || pos.opl < prevpos.opl + loaders[i]->max_opl_voices) &&
+				(loaders[i]->max_opm_voices == 0 || pos.opm < prevpos.opm + loaders[i]->max_opm_voices) &&
+				(loaders[i]->max_opn_voices == 0 || pos.opn < prevpos.opn + loaders[i]->max_opn_voices)
+			) break;
 		}
 	}
 
@@ -354,9 +368,6 @@ int each_vgm_file(const char *path, int (*process_file)(DATA_LOADER *, char *, c
 }
 
 int main(int argc, char **argv) {
-	char *opt_opl_format_str = "BNK";
-	char *opt_opm_format_str = "OPM";
-	char *opt_opn_format_str = "INS";
 	int optind = cmdline_parse_args(argc, argv, (struct cmdline_option[]){
 		{
 			'o', "output",
@@ -398,10 +409,6 @@ int main(int argc, char **argv) {
 	}, 1, 0, "files.vg[mz]");
 
 	if(optind < 0) exit(-optind);
-
-	opt_opl_format = fm_get_voice_file_format_from_name(opt_opl_format_str);
-	opt_opm_format = fm_get_voice_file_format_from_name(opt_opm_format_str);
-	opt_opn_format = fm_get_voice_file_format_from_name(opt_opn_format_str);
 
 	for(int i = optind; i < argc; i++) {
 		int r = each_vgm_file(argv[i], vgm_file_cb, 0);

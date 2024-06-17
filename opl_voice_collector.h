@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "libfmvoice/fm_voice.h"
+#include "libfmvoice/opl_voice.h"
 
 struct opl_voice_collector_voice {
 	struct opl_voice voice;
