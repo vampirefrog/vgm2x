@@ -167,9 +167,9 @@ static int vgm_file_cb(DATA_LOADER *loader, char *target_dir, char *filename_bas
 				snprintf(fmfile, sizeof(fmfile), "%s/%s.%s", target_dir, filename_base, loaders[i]->file_ext);
 			} else {
 				int next = j;
-				if(loaders[i]->max_opl_voices == 0) next += bank.num_opl_voices - pos.opl; else next += loaders[i]->max_opl_voices;
-				if(loaders[i]->max_opm_voices == 0) next += bank.num_opm_voices - pos.opm; else next += loaders[i]->max_opm_voices;
-				if(loaders[i]->max_opn_voices == 0) next += bank.num_opn_voices - pos.opn; else next += loaders[i]->max_opn_voices;
+				if(loaders[i]->max_opl_voices == 0) next += bank.num_opl_voices - pos.opl; else next += MIN(bank.num_opl_voices, loaders[i]->max_opl_voices);
+				if(loaders[i]->max_opm_voices == 0) next += bank.num_opm_voices - pos.opm; else next += MIN(bank.num_opm_voices, loaders[i]->max_opm_voices);
+				if(loaders[i]->max_opn_voices == 0) next += bank.num_opn_voices - pos.opn; else next += MIN(bank.num_opn_voices, loaders[i]->max_opn_voices);
 				snprintf(fmfile, sizeof(fmfile), "%s/%s-%d-%d.%s", target_dir, filename_base, j + 1, next + 1, loaders[i]->file_ext);
 			}
 			FILE *o = fopen(fmfile, "w");
