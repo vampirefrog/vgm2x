@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-Wall -ggdb $(shell pkg-config --cflags libarchive libzip)
-LDFLAGS=-lz -lm $(shell pkg-config --libs libarchive libzip)
+CFLAGS=-Wall -ggdb $(shell pkg-config --cflags libzip)
+LDFLAGS=-lz -lm $(shell pkg-config --libs libzip)
 VGMDIR=
 
 .PHONY: all extract
