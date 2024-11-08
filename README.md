@@ -1,6 +1,8 @@
 VGM extraction and conversion tools
 ===================================
 
+[![Linux Build](https://github.com/vampirefrog/vgm2x/actions/workflows/linux.yml/badge.svg)](https://github.com/vampirefrog/vgm2x/actions/workflows/linux.yml)
+
 Some tools to extract MIDI and 4-op FM voices from [.VGM files](https://vgmrips.net/wiki/VGM_File_Format).
 
 Conversion tools
