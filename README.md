@@ -2,7 +2,7 @@ VGM extraction and conversion tools
 ===================================
 
 
-![Project status](https://img.shields.io/badge/Project%20status-Alpha-blue.svg)
+![Project status](https://img.shields.io/badge/Project%20status-Alpha-blue.svg) ![License](https://img.shields.io/github/license/vampirefrog/vgm2x?color=green)
 
 [![Linux Build](https://github.com/vampirefrog/vgm2x/actions/workflows/linux.yml/badge.svg)](https://github.com/vampirefrog/vgm2x/actions/workflows/linux.yml) [![Linux Build](https://github.com/vampirefrog/vgm2x/actions/workflows/macos.yml/badge.svg)](https://github.com/vampirefrog/vgm2x/actions/workflows/macos.yml) [![Linux Build](https://github.com/vampirefrog/vgm2x/actions/workflows/msys2-mingw64.yml/badge.svg)](https://github.com/vampirefrog/vgm2x/actions/workflows/msys2-mingw64.yml)
 
